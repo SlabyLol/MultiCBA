@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro CRT - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: monospace; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.85); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .bar button, .bar a { background: #111; color: #0f0; border: 1px solid #0f0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #0f0; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #0a0; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Retro CRT · 6s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    function draw() {
+      t += 0.016;
+      // dark green phosphor bg
+      ctx.fillStyle = '#020802';
+      ctx.fillRect(0, 0, 640, 360);
+
+      // scanlines
+      for (let y = 0; y < 360; y += 3) {
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(0, y, 640, 1);
+      }
+
+      // CRT curve vignette approximation
+      const vg = ctx.createRadialGradient(320, 180, 80, 320, 180, 280);
+      vg.addColorStop(0, 'transparent');
+      vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, 640, 360);
+
+      // boot text
+      ctx.fillStyle = '#33ff33';
+      ctx.font = '16px monospace';
+      const lines = [
+        'BIOS v1.2.4',
+        'Memory Check........... OK',
+        'CPU: 6502 @ 1MHz',
+        'Loading kernel...',
+        'Mounting volumes...',
+        'Starting shell...'
+      ];
+      const visible = Math.min(lines.length, Math.floor(t * 1.2));
+      for (let i = 0; i < visible; i++) {
+        ctx.fillText('> ' + lines[i], 40, 60 + i * 28);
+      }
+      // cursor blink
+      if (Math.floor(t * 2) % 2 === 0 && visible < lines.length + 1) {
+        ctx.fillRect(40, 60 + visible * 28 - 12, 10, 16);
+      }
+
+      // flicker
+      if (Math.random() > 0.97) {
+        ctx.fillStyle = 'rgba(0,255,0,0.03)';
+        ctx.fillRect(0, 0, 640, 360);
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      // low hum + beeps
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = 60;
+      g.gain.setValueAtTime(0.04, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 2);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 2.1);
+      for (let i = 0; i < 4; i++) {
+        const o2 = actx.createOscillator(), g2 = actx.createGain();
+        o2.type = 'square'; o2.frequency.value = 800;
+        g2.gain.setValueAtTime(0.05, actx.currentTime + 0.5 + i * 0.4);
+        g2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.5 + i * 0.4 + 0.08);
+        o2.connect(g2); g2.connect(actx.destination);
+        o2.start(actx.currentTime + 0.5 + i * 0.4);
+        o2.stop(actx.currentTime + 0.5 + i * 0.4 + 0.1);
+      }
+    }
+    setTimeout(bootSound, 300);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 6, 'crt-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
