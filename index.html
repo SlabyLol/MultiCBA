@@ -4,124 +4,64 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MultiCBA - Multi Custom Boot Animations</title>
-  <meta name="description" content="Custom boot animations: console remakes (PS3 BadCBA), jumpscares, editable text, real video download.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta name="description" content="All custom boot animations with real video download. Console remakes, jumpscares, BadCBA PS3.">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0a0a0f; --card: #12121a; --accent: #00f0ff; --accent2: #ff00aa;
-      --text: #e8e8f0; --muted: #8888a0; --radius: 16px; --danger: #ff2244;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
-    .bg-grid {
-      position: fixed; inset: 0;
-      background-image: linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px; pointer-events: none; z-index: 0;
-    }
-    header {
-      position: relative; z-index: 10; text-align: center; padding: 3rem 1.5rem 1.5rem;
-      background: linear-gradient(180deg, rgba(0,240,255,0.08) 0%, transparent 100%);
-    }
-    header h1 {
-      font-family: 'Orbitron', sans-serif; font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      letter-spacing: 2px; margin-bottom: 0.5rem;
-    }
-    header p { color: var(--muted); font-size: 1.05rem; max-width: 640px; margin: 0 auto 0.75rem; }
-    .quote {
-      font-style: italic; color: #6af; font-size: 0.95rem; max-width: 560px; margin: 0.5rem auto 1rem;
-      opacity: 0.9;
-    }
-    .stats { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; margin-top: 0.75rem; }
-    .stat { background: var(--card); border: 1px solid rgba(0,240,255,0.2); padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.85rem; }
-    .stat strong { color: var(--accent); }
-    .controls {
-      position: relative; z-index: 10; display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;
-      padding: 0 1.5rem 1.75rem;
-    }
-    .search-box {
-      background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
-      padding: 0.65rem 1.1rem; color: var(--text); font-size: 0.95rem; width: min(260px, 100%); outline: none;
-    }
-    .search-box:focus { border-color: var(--accent); }
-    .filter-btn {
-      background: var(--card); border: 1px solid rgba(255,255,255,0.1); color: var(--text);
-      padding: 0.65rem 1rem; border-radius: 12px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
-    }
-    .filter-btn:hover, .filter-btn.active { border-color: var(--accent); background: rgba(0,240,255,0.1); color: var(--accent); }
-    .filter-btn.danger.active { border-color: var(--danger); background: rgba(255,34,68,0.15); color: var(--danger); }
-    .grid {
-      position: relative; z-index: 10; display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 1.35rem; padding: 0 1.5rem 4rem; max-width: 1400px; margin: 0 auto;
-    }
-    .card {
-      background: var(--card); border: 1px solid rgba(255,255,255,0.06); border-radius: var(--radius);
-      overflow: hidden; transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
-    }
-    .card:hover { transform: translateY(-4px); border-color: rgba(0,240,255,0.3); box-shadow: 0 12px 40px rgba(0,240,255,0.1); }
-    .card.tag-jumpscare:hover { border-color: rgba(255,34,68,0.5); box-shadow: 0 12px 40px rgba(255,34,68,0.15); }
-    .preview { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden; }
-    .preview iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
-    .preview-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.35);
-      display: flex; align-items: center; justify-content: center; z-index: 5; cursor: pointer;
-    }
-    .play-icon {
-      width: 50px; height: 50px; background: rgba(0,240,255,0.2); border: 2px solid var(--accent);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: var(--accent);
-    }
-    .badge { position: absolute; top: 8px; right: 8px; z-index: 6; font-size: 0.65rem; padding: 3px 7px; border-radius: 6px; font-weight: 600; }
-    .badge-console { background: rgba(0,100,255,0.85); color: #fff; }
-    .badge-jumpscare { background: rgba(200,0,40,0.9); color: #fff; }
-    .badge-edit { background: rgba(0,180,100,0.85); color: #fff; }
-    .badge-badcba { background: rgba(74,158,255,0.9); color: #fff; }
-    .info { padding: 0.95rem 1.1rem 1.1rem; }
-    .info h3 { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; }
-    .meta { display: flex; gap: 0.55rem; flex-wrap: wrap; margin-bottom: 0.8rem; font-size: 0.75rem; color: var(--muted); }
-    .meta .duration { color: var(--accent); }
-    .actions { display: flex; gap: 0.45rem; }
-    .btn {
-      flex: 1; padding: 0.55rem 0.6rem; border: none; border-radius: 10px; font-size: 0.8rem; font-weight: 500;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.25rem; text-decoration: none;
-    }
-    .btn-preview { background: rgba(0,240,255,0.15); color: var(--accent); border: 1px solid rgba(0,240,255,0.3); }
-    .btn-preview:hover { background: rgba(0,240,255,0.25); }
-    .btn-download { background: linear-gradient(135deg, var(--accent2), #ff4488); color: white; }
-    .btn-download:hover { filter: brightness(1.15); }
-    footer {
-      position: relative; z-index: 10; text-align: center; padding: 2rem 1.5rem 3rem;
-      color: var(--muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    footer a { color: var(--accent); text-decoration: none; }
-    .toast {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
-      background: var(--card); border: 1px solid var(--accent); color: var(--text);
-      padding: 0.9rem 1.5rem; border-radius: 12px; z-index: 100; transition: transform 0.3s;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5); max-width: 90%;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .actions { flex-direction: column; } }
+    :root{--bg:#0a0a0f;--card:#12121a;--accent:#00f0ff;--accent2:#ff00aa;--text:#e8e8f0;--muted:#8888a0;--radius:16px;--danger:#ff2244}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+    .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(0,240,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+    header{position:relative;z-index:10;text-align:center;padding:2.5rem 1.5rem 1.25rem;background:linear-gradient(180deg,rgba(0,240,255,.08),transparent)}
+    header h1{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,6vw,3rem);font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;margin-bottom:.4rem}
+    header p{color:var(--muted);font-size:1rem;max-width:620px;margin:0 auto .5rem}
+    .quote{font-style:italic;color:#6af;font-size:.9rem;max-width:540px;margin:.4rem auto .8rem}
+    .stats{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+    .stat{background:var(--card);border:1px solid rgba(0,240,255,.2);padding:.45rem .9rem;border-radius:999px;font-size:.85rem}
+    .stat strong{color:var(--accent)}
+    .controls{position:relative;z-index:10;display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;padding:0 1.5rem 1.5rem}
+    .search-box{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem 1rem;color:var(--text);font-size:.95rem;width:min(250px,100%);outline:none}
+    .search-box:focus{border-color:var(--accent)}
+    .filter-btn{background:var(--card);border:1px solid rgba(255,255,255,.1);color:var(--text);padding:.6rem .95rem;border-radius:12px;cursor:pointer;font-size:.85rem}
+    .filter-btn:hover,.filter-btn.active{border-color:var(--accent);background:rgba(0,240,255,.1);color:var(--accent)}
+    .filter-btn.danger.active{border-color:var(--danger);background:rgba(255,34,68,.15);color:var(--danger)}
+    .grid{position:relative;z-index:10;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;padding:0 1.5rem 4rem;max-width:1400px;margin:0 auto}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+    .card:hover{transform:translateY(-4px);border-color:rgba(0,240,255,.3);box-shadow:0 12px 40px rgba(0,240,255,.1)}
+    .card.tag-jumpscare:hover{border-color:rgba(255,34,68,.5)}
+    .preview{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}
+    .preview iframe{width:100%;height:100%;border:none;pointer-events:none}
+    .preview-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:5;cursor:pointer}
+    .play-icon{width:48px;height:48px;background:rgba(0,240,255,.2);border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent)}
+    .badge{position:absolute;top:8px;right:8px;z-index:6;font-size:.65rem;padding:3px 7px;border-radius:6px;font-weight:600}
+    .badge-console{background:rgba(0,100,255,.85);color:#fff}
+    .badge-jumpscare{background:rgba(200,0,40,.9);color:#fff}
+    .badge-edit{background:rgba(0,180,100,.85);color:#fff}
+    .badge-badcba{background:rgba(74,158,255,.9);color:#fff}
+    .info{padding:.9rem 1rem 1rem}
+    .info h3{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:600;margin-bottom:.3rem}
+    .meta{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;font-size:.75rem;color:var(--muted)}
+    .meta .duration{color:var(--accent)}
+    .actions{display:flex;gap:.4rem}
+    .btn{flex:1;padding:.55rem .55rem;border:none;border-radius:10px;font-size:.8rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.25rem;text-decoration:none}
+    .btn-preview{background:rgba(0,240,255,.15);color:var(--accent);border:1px solid rgba(0,240,255,.3)}
+    .btn-download{background:linear-gradient(135deg,var(--accent2),#ff4488);color:#fff}
+    footer{position:relative;z-index:10;text-align:center;padding:2rem 1.5rem 3rem;color:var(--muted);font-size:.9rem;border-top:1px solid rgba(255,255,255,.05)}
+    footer a{color:var(--accent);text-decoration:none}
+    @media(max-width:600px){.grid{grid-template-columns:1fr}.actions{flex-direction:column}}
   </style>
 </head>
 <body>
   <div class="bg-grid"></div>
   <header>
     <h1>MultiCBA</h1>
-    <p>Custom boot animations — console remakes, jumpscares, editable text, real video download.</p>
+    <p>Every animation has real video download (WebM). Open fullscreen → Download Video.</p>
     <p class="quote">“Actually I thought I can just make it for BadCBA for the PS3 lol”</p>
     <div class="stats">
       <div class="stat"><strong id="anim-count">0</strong> Animations</div>
+      <div class="stat"><strong>All downloadable</strong></div>
       <div class="stat"><strong>PS3 / BadCBA</strong></div>
-      <div class="stat"><strong>Real Download</strong></div>
-      <div class="stat"><strong>Editable Text</strong></div>
     </div>
   </header>
-
   <div class="controls">
     <input type="text" class="search-box" id="search" placeholder="Search..." oninput="renderCards()">
     <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
@@ -130,125 +70,72 @@
     <button class="filter-btn" data-filter="short" onclick="setFilter('short')">Short</button>
     <button class="filter-btn" data-filter="long" onclick="setFilter('long')">Long</button>
   </div>
-
   <div class="grid" id="grid"></div>
-
   <footer>
     <p>MultiCBA by <a href="https://github.com/SlabyLol" target="_blank">SlabyLol / DarkFox</a> · <a href="https://github.com/SlabyLol/MultiCBA" target="_blank">GitHub</a></p>
-    <p style="margin-top:0.5rem;font-size:0.8rem;">Including <strong style="color:#4a9eff">BadCBA for the PS3</strong> — open fullscreen for sound, text edit & WebM download.</p>
+    <p style="margin-top:.5rem;font-size:.8rem">Open any animation → <strong style="color:var(--accent)">Download Video</strong> records WebM. Convert to MP4 if needed.</p>
   </footer>
-  <div class="toast" id="toast"></div>
-
   <script>
     const animations = [
-      { id: 'neon', name: 'Neon Pulse', duration: 6, res: '1080p', tags: ['long'] },
-      { id: 'matrix', name: 'Matrix Rain', duration: 8, res: '1080p', tags: ['long'] },
-      { id: 'android', name: 'Android Bounce', duration: 5, res: '720p', tags: ['long'] },
-      { id: 'particles', name: 'Particle Burst', duration: 4, res: '1080p', tags: ['short'] },
-      { id: 'ring', name: 'Loading Ring', duration: 4, res: '1080p', tags: ['short'] },
-      { id: 'glitch', name: 'Glitch Text', duration: 5, res: '1080p', tags: ['long', 'edit'] },
-      { id: 'wave', name: 'Wave Bars', duration: 3, res: '720p', tags: ['short'] },
-      { id: 'circle', name: 'Circle Expand', duration: 4, res: '1080p', tags: ['short'] },
-      { id: 'cyber', name: 'Cyber Grid', duration: 7, res: '1080p', tags: ['long'] },
-      { id: 'reveal', name: 'Logo Reveal', duration: 6, res: '1080p', tags: ['long', 'edit'] },
-      { id: 'dots', name: 'Spinner Dots', duration: 3, res: '720p', tags: ['short'] },
-      { id: 'energy', name: 'Energy Flame', duration: 5, res: '1080p', tags: ['long'] },
-      { id: 'binary', name: 'Binary Stream', duration: 6, res: '1080p', tags: ['long'] },
-      { id: 'core', name: 'Core Pulse', duration: 4, res: '1080p', tags: ['short'] },
-      { id: 'rainbow', name: 'Rainbow Sweep', duration: 5, res: '1080p', tags: ['long'] },
-      { id: 'hex', name: 'Hexagon Spin', duration: 4, res: '720p', tags: ['short'] },
-      { id: 'type', name: 'Typewriter', duration: 5, res: '720p', tags: ['long', 'edit'] },
-      { id: 'orbit', name: 'Orbit', duration: 4, res: '1080p', tags: ['short'] },
-      { id: 'shatter', name: 'Shatter', duration: 3, res: '1080p', tags: ['short'] },
-      { id: 'progress', name: 'Progress Boot', duration: 7, res: '1080p', tags: ['long'] },
-      { id: 'ps1', name: 'PS1 Boot', duration: 6, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'ps3', name: 'PS3 / BadCBA', duration: 8, res: '1080p', tags: ['long', 'console', 'edit', 'download', 'badcba'] },
-      { id: 'ps5', name: 'PS5 Boot', duration: 7, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'xbox', name: 'Xbox Boot', duration: 6, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'switch', name: 'Nintendo Switch', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'sega', name: 'Sega', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'crt', name: 'Retro CRT', duration: 6, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'gamecube', name: 'GameCube', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'n64', name: 'N64', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'dreamcast', name: 'Dreamcast', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'wii', name: 'Wii', duration: 5, res: '1080p', tags: ['long', 'console', 'download'] },
-      { id: 'jumpscare', name: 'Jumpscare', duration: 7, res: '1080p', tags: ['long', 'jumpscare', 'edit', 'download'] },
-      { id: 'jumpscare2', name: 'Glitch Jumpscare', duration: 6, res: '1080p', tags: ['long', 'jumpscare', 'edit', 'download'] },
-      { id: 'jumpscare3', name: 'Door Jumpscare', duration: 6, res: '1080p', tags: ['long', 'jumpscare', 'edit', 'download'] }
+      {id:'neon',name:'Neon Pulse',duration:6,res:'1080p',tags:['long']},
+      {id:'matrix',name:'Matrix Rain',duration:8,res:'1080p',tags:['long']},
+      {id:'android',name:'Android Bounce',duration:5,res:'720p',tags:['long']},
+      {id:'particles',name:'Particle Burst',duration:4,res:'1080p',tags:['short']},
+      {id:'ring',name:'Loading Ring',duration:4,res:'1080p',tags:['short']},
+      {id:'glitch',name:'Glitch Text',duration:5,res:'1080p',tags:['long','edit']},
+      {id:'wave',name:'Wave Bars',duration:3,res:'720p',tags:['short']},
+      {id:'circle',name:'Circle Expand',duration:4,res:'1080p',tags:['short']},
+      {id:'cyber',name:'Cyber Grid',duration:7,res:'1080p',tags:['long']},
+      {id:'reveal',name:'Logo Reveal',duration:6,res:'1080p',tags:['long','edit']},
+      {id:'dots',name:'Spinner Dots',duration:3,res:'720p',tags:['short']},
+      {id:'energy',name:'Energy Flame',duration:5,res:'1080p',tags:['long']},
+      {id:'binary',name:'Binary Stream',duration:6,res:'1080p',tags:['long']},
+      {id:'core',name:'Core Pulse',duration:4,res:'1080p',tags:['short']},
+      {id:'rainbow',name:'Rainbow Sweep',duration:5,res:'1080p',tags:['long']},
+      {id:'hex',name:'Hexagon Spin',duration:4,res:'720p',tags:['short']},
+      {id:'type',name:'Typewriter',duration:5,res:'720p',tags:['long','edit']},
+      {id:'orbit',name:'Orbit',duration:4,res:'1080p',tags:['short']},
+      {id:'shatter',name:'Shatter',duration:3,res:'1080p',tags:['short']},
+      {id:'progress',name:'Progress Boot',duration:7,res:'1080p',tags:['long']},
+      {id:'ps1',name:'PS1 Boot',duration:6,res:'1080p',tags:['long','console']},
+      {id:'ps3',name:'PS3 / BadCBA',duration:8,res:'1080p',tags:['long','console','edit','badcba']},
+      {id:'ps5',name:'PS5 Boot',duration:7,res:'1080p',tags:['long','console']},
+      {id:'xbox',name:'Xbox Boot',duration:6,res:'1080p',tags:['long','console']},
+      {id:'switch',name:'Nintendo Switch',duration:5,res:'1080p',tags:['long','console']},
+      {id:'sega',name:'Sega',duration:5,res:'1080p',tags:['long','console']},
+      {id:'crt',name:'Retro CRT',duration:6,res:'1080p',tags:['long','console']},
+      {id:'gamecube',name:'GameCube',duration:5,res:'1080p',tags:['long','console']},
+      {id:'n64',name:'N64',duration:5,res:'1080p',tags:['long','console']},
+      {id:'dreamcast',name:'Dreamcast',duration:5,res:'1080p',tags:['long','console']},
+      {id:'wii',name:'Wii',duration:5,res:'1080p',tags:['long','console']},
+      {id:'jumpscare',name:'Jumpscare',duration:7,res:'1080p',tags:['long','jumpscare','edit']},
+      {id:'jumpscare2',name:'Glitch Jumpscare',duration:6,res:'1080p',tags:['long','jumpscare','edit']},
+      {id:'jumpscare3',name:'Door Jumpscare',duration:6,res:'1080p',tags:['long','jumpscare','edit']}
     ];
-
-    let currentFilter = 'all';
-
-    function renderCards() {
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      const q = document.getElementById('search').value.toLowerCase();
-
-      animations.forEach(anim => {
-        if (currentFilter === 'short' && !anim.tags.includes('short')) return;
-        if (currentFilter === 'long' && !anim.tags.includes('long')) return;
-        if (currentFilter === 'console' && !anim.tags.includes('console')) return;
-        if (currentFilter === 'jumpscare' && !anim.tags.includes('jumpscare')) return;
-        if (q && !anim.name.toLowerCase().includes(q) && !anim.id.includes(q)) return;
-
-        const card = document.createElement('div');
-        card.className = 'card' + (anim.tags.includes('jumpscare') ? ' tag-jumpscare' : '');
-
-        let badges = '';
-        if (anim.tags.includes('badcba')) badges += '<span class="badge badge-badcba">BadCBA</span>';
-        else if (anim.tags.includes('console')) badges += '<span class="badge badge-console">CONSOLE</span>';
-        if (anim.tags.includes('jumpscare')) badges += '<span class="badge badge-jumpscare">JUMPSCARE</span>';
-        if (anim.tags.includes('edit')) badges += '<span class="badge badge-edit" style="top:8px;right:auto;left:8px">EDIT TEXT</span>';
-
-        const hasRealDl = anim.tags.includes('download');
-        card.innerHTML = `
-          <div class="preview">
-            <iframe src="animations/${anim.id}/index.html?preview=1" loading="lazy" title="${anim.name}"></iframe>
-            ${badges}
-            <div class="preview-overlay" onclick="window.open('animations/${anim.id}/index.html', '_blank')">
-              <div class="play-icon">▶</div>
-            </div>
-          </div>
-          <div class="info">
-            <h3>${anim.name}</h3>
-            <div class="meta">
-              <span class="duration">⏱ ${anim.duration}s</span>
-              <span>📐 ${anim.res}</span>
-              <span>🔊</span>
-              ${hasRealDl ? '<span>⬇ Video</span>' : ''}
-              ${anim.tags.includes('edit') ? '<span>✏️</span>' : ''}
-            </div>
-            <div class="actions">
-              <a class="btn btn-preview" href="animations/${anim.id}/index.html" target="_blank">▶ Open</a>
-              <button class="btn btn-download" onclick="${hasRealDl ? `window.open('animations/${anim.id}/index.html','_blank')` : `downloadNote('${anim.name}')`}">
-                ⬇ ${hasRealDl ? 'Download' : 'Info'}
-              </button>
-            </div>
-          </div>
-        `;
+    let currentFilter='all';
+    function renderCards(){
+      const grid=document.getElementById('grid');grid.innerHTML='';
+      const q=document.getElementById('search').value.toLowerCase();
+      animations.forEach(anim=>{
+        if(currentFilter==='short'&&!anim.tags.includes('short'))return;
+        if(currentFilter==='long'&&!anim.tags.includes('long'))return;
+        if(currentFilter==='console'&&!anim.tags.includes('console'))return;
+        if(currentFilter==='jumpscare'&&!anim.tags.includes('jumpscare'))return;
+        if(q&&!anim.name.toLowerCase().includes(q)&&!anim.id.includes(q))return;
+        const card=document.createElement('div');
+        card.className='card'+(anim.tags.includes('jumpscare')?' tag-jumpscare':'');
+        let badges='';
+        if(anim.tags.includes('badcba'))badges+='<span class="badge badge-badcba">BadCBA</span>';
+        else if(anim.tags.includes('console'))badges+='<span class="badge badge-console">CONSOLE</span>';
+        if(anim.tags.includes('jumpscare'))badges+='<span class="badge badge-jumpscare">JUMPSCARE</span>';
+        if(anim.tags.includes('edit'))badges+='<span class="badge badge-edit" style="top:8px;right:auto;left:8px">EDIT</span>';
+        card.innerHTML=`<div class="preview"><iframe src="animations/${anim.id}/index.html?preview=1" loading="lazy" title="${anim.name}"></iframe>${badges}<div class="preview-overlay" onclick="window.open('animations/${anim.id}/index.html','_blank')"><div class="play-icon">▶</div></div></div><div class="info"><h3>${anim.name}</h3><div class="meta"><span class="duration">⏱ ${anim.duration}s</span><span>📐 ${anim.res}</span><span>⬇ Download</span></div><div class="actions"><a class="btn btn-preview" href="animations/${anim.id}/index.html" target="_blank">▶ Open</a><a class="btn btn-download" href="animations/${anim.id}/index.html" target="_blank">⬇ Download</a></div></div>`;
         grid.appendChild(card);
       });
     }
-
-    function setFilter(f) {
-      currentFilter = f;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
-      renderCards();
-    }
-
-    function downloadNote(name) {
-      showToast('"' + name + '": open fullscreen. Canvas ones have real Download Video.');
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 4000);
-    }
-
+    function setFilter(f){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===f));renderCards();}
     renderCards();
-    document.getElementById('anim-count').textContent = animations.length;
+    document.getElementById('anim-count').textContent=animations.length;
   </script>
 </body>
 </html>
