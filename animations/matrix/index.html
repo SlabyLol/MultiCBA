@@ -5,70 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Matrix Rain - MultiCBA</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; height: 100vh; overflow: hidden; font-family: monospace; }
-    canvas { display: block; width: 100%; height: 100%; }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #0f0; font-size: 0.85rem; text-align: center; opacity: 0.7;
-      background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #0f0; }
-    body.preview .info { display: none; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:#000;height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace}
+    canvas{display:block;max-width:100%;max-height:75vh}
+    .bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;font-family:system-ui,sans-serif}
+    .bar button,.bar a{background:#020;color:#0f0;border:1px solid #0f0;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}
+    .bar button:hover,.bar a:hover{background:#0f0;color:#000}
+    .bar button:disabled{opacity:.5;cursor:wait}
+    .bar span{color:#0a0;font-size:.85rem}
+    body.preview .bar{display:none}
   </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
-  <div class="info">Matrix Rain · 8s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Matrix Rain · 8s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
   <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    let w, h, cols, drops;
-
-    function resize() {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-      cols = Math.floor(w / 18);
-      drops = Array(cols).fill(1);
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    const chars = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄナニﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789';
-
-    function draw() {
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#0f0';
-      ctx.font = '16px monospace';
-      for (let i = 0; i < drops.length; i++) {
-        const text = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillText(text, i * 18, drops[i] * 18);
-        if (drops[i] * 18 > h && Math.random() > 0.975) drops[i] = 0;
+    if(location.search.includes('preview=1'))document.body.classList.add('preview');
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    const cols=Math.floor(640/16);const drops=Array(cols).fill(1);
+    const chars='ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ0123456789';
+    function draw(){
+      ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,0,640,360);
+      ctx.fillStyle='#0f0';ctx.font='14px monospace';
+      for(let i=0;i<drops.length;i++){
+        ctx.fillText(chars[Math.floor(Math.random()*chars.length)],i*16,drops[i]*16);
+        if(drops[i]*16>360&&Math.random()>0.975)drops[i]=0;
         drops[i]++;
       }
+      requestAnimationFrame(draw);
     }
-    setInterval(draw, 40);
-
-    // Sound
-    const actx = new (window.AudioContext || window.webkitAudioContext)();
-    function blip() {
-      if (actx.state === 'suspended') actx.resume();
-      for (let i = 0; i < 6; i++) {
-        const o = actx.createOscillator(), g = actx.createGain();
-        o.type = 'square';
-        o.frequency.value = 180 + Math.random() * 350;
-        g.gain.setValueAtTime(0.05, actx.currentTime + i * 0.1);
-        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.1 + 0.12);
-        o.connect(g); g.connect(actx.destination);
-        o.start(actx.currentTime + i * 0.1);
-        o.stop(actx.currentTime + i * 0.1 + 0.15);
-      }
-    }
-    setTimeout(blip, 400);
-    setInterval(blip, 2500);
+    draw();
+    const actx=new(window.AudioContext||window.webkitAudioContext)();
+    function blip(){if(actx.state==='suspended')actx.resume();for(let i=0;i<5;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=180+Math.random()*300;g.gain.setValueAtTime(0.04,actx.currentTime+i*0.08);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+i*0.08+0.1);o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+i*0.08);o.stop(actx.currentTime+i*0.08+0.12);}}
+    setTimeout(blip,400);setInterval(blip,2500);
+    MultiCBABindDownload('dl',canvas,8,'matrix-rain');
   </script>
 </body>
 </html>
