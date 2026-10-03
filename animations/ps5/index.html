@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS5 Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.85); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .bar button, .bar a { background: #1a1a2e; color: #fff; border: 1px solid #00d4ff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #00d4ff; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>PS5 Boot · 7s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 640, 360);
+
+      // ambient glow
+      const g = ctx.createRadialGradient(320, 180, 10, 320, 180, 180);
+      g.addColorStop(0, 'rgba(0, 100, 180, 0.25)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 640, 360);
+
+      // PS5-like dual shape (simplified abstract)
+      const scale = 0.5 + 0.5 * Math.min(1, t / 1.5);
+      const alpha = Math.min(1, t / 1.2);
+      ctx.save();
+      ctx.translate(320, 160);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+
+      // left blob
+      ctx.beginPath();
+      ctx.ellipse(-35, 0, 28, 45, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      // right blob
+      ctx.beginPath();
+      ctx.ellipse(35, 0, 28, 45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // bridge
+      ctx.fillRect(-20, -12, 40, 24);
+
+      ctx.restore();
+
+      // text fade in
+      if (t > 2) {
+        const a = Math.min(1, (t - 2) / 0.8);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#fff';
+        ctx.font = '300 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('PlayStation', 320, 260);
+        ctx.globalAlpha = 1;
+      }
+
+      // subtle particles
+      for (let i = 0; i < 12; i++) {
+        const px = 320 + Math.cos(t + i) * (60 + i * 8);
+        const py = 160 + Math.sin(t * 0.7 + i) * (30 + i * 3);
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 200, 255, ${0.3 + 0.3 * Math.sin(t * 2 + i)})`;
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      [220, 330, 440, 554].forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, actx.currentTime + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.15 + 0.6);
+        o.connect(g); g.connect(actx.destination);
+        o.start(actx.currentTime + i * 0.15); o.stop(actx.currentTime + i * 0.15 + 0.65);
+      });
+    }
+    setTimeout(bootSound, 500);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 7, 'ps5-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
