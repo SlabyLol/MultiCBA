@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wii Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #e8f4fc; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.75); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .bar button, .bar a { background: #1b6; color: #fff; border: 1px solid #4d8; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #4d8; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #ccc; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Wii · 5s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    function draw() {
+      t += 0.016;
+      // light blue sky background
+      const g = ctx.createLinearGradient(0, 0, 0, 360);
+      g.addColorStop(0, '#b8e0f8');
+      g.addColorStop(1, '#e8f4fc');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 640, 360);
+
+      // soft clouds
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      for (let i = 0; i < 5; i++) {
+        const cx = 80 + i * 120 + Math.sin(t + i) * 10;
+        const cy = 60 + (i % 3) * 30;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+        ctx.arc(cx + 20, cy - 5, 20, 0, Math.PI * 2);
+        ctx.arc(cx + 40, cy, 22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Wii logo style
+      const s = Math.min(1, t / 1);
+      ctx.save();
+      ctx.translate(320, 180);
+      ctx.scale(s, s);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.font = 'bold 72px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Wii', 0, 0);
+      ctx.restore();
+
+      if (t > 2) {
+        const a = Math.min(1, (t - 2) / 0.5);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#333';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nintendo', 320, 260);
+        ctx.globalAlpha = 1;
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      // cheerful ping
+      [523, 659, 784].forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, actx.currentTime + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.15 + 0.4);
+        o.connect(g); g.connect(actx.destination);
+        o.start(actx.currentTime + i * 0.15); o.stop(actx.currentTime + i * 0.15 + 0.45);
+      });
+    }
+    setTimeout(bootSound, 400);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 5, 'wii-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
