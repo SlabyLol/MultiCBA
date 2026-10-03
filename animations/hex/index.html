@@ -1,64 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hexagon Spin - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #080812; height: 100vh;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    .hex {
-      width: 80px; height: 46px;
-      background: transparent;
-      border-left: 3px solid #00f0ff;
-      border-right: 3px solid #00f0ff;
-      position: relative;
-      animation: spin 3s linear infinite;
-    }
-    .hex::before, .hex::after {
-      content: ''; position: absolute;
-      width: 80px; height: 46px;
-      border-left: 3px solid #ff00aa;
-      border-right: 3px solid #ff00aa;
-    }
-    .hex::before { transform: rotate(60deg); }
-    .hex::after { transform: rotate(-60deg); }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #888; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hexagon Spin - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#080812;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="hex"></div>
-  <div class="info">Hexagon Spin · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'triangle'; o.frequency.value = 350;
-      g.gain.setValueAtTime(0.1, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.4);
-      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-      o2.type = 'triangle'; o2.frequency.value = 525;
-      g2.gain.setValueAtTime(0.08, ctx.currentTime + 0.25);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
-      o2.connect(g2); g2.connect(ctx.destination);
-      o2.start(ctx.currentTime + 0.25); o2.stop(ctx.currentTime + 0.7);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 4000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Hexagon Spin · 4s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let t=0;
+function hex(cx,cy,r,rot,color){ctx.beginPath();for(let i=0;i<6;i++){const a=rot+i*Math.PI/3;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.closePath();ctx.strokeStyle=color;ctx.lineWidth=3;ctx.stroke();}
+function draw(){t+=0.016;ctx.fillStyle='#080812';ctx.fillRect(0,0,640,360);hex(320,180,55,t, '#00f0ff');hex(320,180,55,t+Math.PI/6,'#ff00aa');
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();[350,525].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0.08,actx.currentTime+i*0.2);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+i*0.2+0.35);o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+i*0.2);o.stop(actx.currentTime+i*0.2+0.4);});}
+setTimeout(snd,300);setInterval(snd,4000);
+MultiCBABindDownload('dl',canvas,4,'hexagon-spin');
+</script></body></html>
