@@ -1,57 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Binary Stream - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #000; height: 100vh; overflow: hidden;
-      font-family: monospace; font-size: 14px; color: #00f0ff;
-      line-height: 1.4; padding: 10px; opacity: 0.85;
-      white-space: pre; animation: scroll 10s linear infinite;
-    }
-    @keyframes scroll {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-50%); }
-    }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #00f0ff; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 8px;
-      white-space: normal;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Stream - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;font-family:system-ui,sans-serif}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    let bin = '';
-    for (let i = 0; i < 60; i++) {
-      for (let j = 0; j < 80; j++) bin += Math.random() > 0.5 ? '1' : '0';
-      bin += '\n';
-    }
-    document.body.insertAdjacentText('afterbegin', bin + bin);
-  </script>
-  <div class="info">Binary Stream · 6s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      for (let i = 0; i < 10; i++) {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = 90 + (i % 5) * 40;
-        g.gain.setValueAtTime(0.035, ctx.currentTime + i * 0.08);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.07);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(ctx.currentTime + i * 0.08); o.stop(ctx.currentTime + i * 0.08 + 0.1);
-      }
-    }
-    setTimeout(play, 300);
-    setInterval(play, 2000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Binary Stream · 6s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let t=0;let lines=[];for(let i=0;i<30;i++){let s='';for(let j=0;j<70;j++)s+=Math.random()>0.5?'1':'0';lines.push(s);}
+function draw(){t+=0.016;ctx.fillStyle='#000';ctx.fillRect(0,0,640,360);ctx.fillStyle='rgba(0,240,255,0.7)';ctx.font='12px monospace';
+const off=(t*40)%16;for(let i=0;i<lines.length;i++){ctx.fillText(lines[i],8,i*14-off+14);}
+if(Math.random()>0.95){const i=Math.floor(Math.random()*lines.length);let s='';for(let j=0;j<70;j++)s+=Math.random()>0.5?'1':'0';lines[i]=s;}
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();for(let i=0;i<8;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=90+(i%4)*40;g.gain.setValueAtTime(0.03,actx.currentTime+i*0.06);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+i*0.06+0.06);o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+i*0.06);o.stop(actx.currentTime+i*0.06+0.08);}}
+setTimeout(snd,300);setInterval(snd,2000);
+MultiCBABindDownload('dl',canvas,6,'binary-stream');
+</script></body></html>
