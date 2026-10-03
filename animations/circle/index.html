@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle Expand - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000; height: 100vh;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .ring {
+      position: absolute; border: 2px solid #00f0ff; border-radius: 50%;
+      animation: expand 2s ease-out infinite; opacity: 0;
+    }
+    @keyframes expand {
+      0% { width: 10px; height: 10px; opacity: 1; }
+      100% { width: 300px; height: 300px; opacity: 0; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    for (let i = 0; i < 5; i++) {
+      const r = document.createElement('div');
+      r.className = 'ring';
+      r.style.animationDelay = (i * 0.4) + 's';
+      document.body.appendChild(r);
+    }
+  </script>
+  <div class="info">Circle Expand · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(100, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(700, ctx.currentTime + 0.9);
+      g.gain.setValueAtTime(0.12, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.95);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 4000);
+  </script>
+</body>
+</html>
