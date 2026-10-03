@@ -1,64 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Orbit - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: radial-gradient(circle, #0a1020, #000);
-      height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden;
-    }
-    .center {
-      width: 20px; height: 20px; background: #00f0ff; border-radius: 50%;
-      box-shadow: 0 0 20px #00f0ff; z-index: 2;
-    }
-    .path {
-      position: absolute; border: 1px solid rgba(0,240,255,0.25); border-radius: 50%;
-      animation: orbit linear infinite;
-    }
-    .path::after {
-      content: ''; position: absolute; top: -6px; left: 50%;
-      width: 12px; height: 12px; background: #ff00aa; border-radius: 50%;
-      box-shadow: 0 0 12px #ff00aa;
-    }
-    @keyframes orbit { to { transform: rotate(360deg); } }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #888; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orbit - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="center"></div>
-  <div class="path" style="width:100px;height:100px;animation-duration:2s"></div>
-  <div class="path" style="width:150px;height:150px;animation-duration:3.2s;animation-direction:reverse"></div>
-  <div class="path" style="width:200px;height:200px;animation-duration:4.5s"></div>
-  <div class="info">Orbit · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine'; o.frequency.value = 260;
-      g.gain.setValueAtTime(0.1, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.95);
-      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-      o2.type = 'sine'; o2.frequency.value = 390;
-      g2.gain.setValueAtTime(0.07, ctx.currentTime + 0.3);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
-      o2.connect(g2); g2.connect(ctx.destination);
-      o2.start(ctx.currentTime + 0.3); o2.stop(ctx.currentTime + 1.05);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 4000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Orbit · 4s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let t=0;
+function draw(){t+=0.016;const bg=ctx.createRadialGradient(320,180,10,320,180,200);bg.addColorStop(0,'#0a1020');bg.addColorStop(1,'#000');ctx.fillStyle=bg;ctx.fillRect(0,0,640,360);
+ctx.beginPath();ctx.arc(320,180,8,0,Math.PI*2);ctx.fillStyle='#00f0ff';ctx.shadowColor='#0ff';ctx.shadowBlur=15;ctx.fill();ctx.shadowBlur=0;
+[[50,2],[70,3.2,-1],[95,4.5]].forEach(([r,spd,dir])=>{dir=dir||1;ctx.beginPath();ctx.arc(320,180,r,0,Math.PI*2);ctx.strokeStyle='rgba(0,240,255,0.25)';ctx.lineWidth=1;ctx.stroke();
+const a=t*spd*dir;ctx.beginPath();ctx.arc(320+Math.cos(a)*r,180+Math.sin(a)*r,5,0,Math.PI*2);ctx.fillStyle='#ff00aa';ctx.shadowColor='#f0a';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;});
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();[260,390].forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;g.gain.setValueAtTime(0.08,actx.currentTime+i*0.25);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+i*0.25+0.7);o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+i*0.25);o.stop(actx.currentTime+i*0.25+0.75);});}
+setTimeout(snd,300);setInterval(snd,4000);
+MultiCBABindDownload('dl',canvas,4,'orbit');
+</script></body></html>
