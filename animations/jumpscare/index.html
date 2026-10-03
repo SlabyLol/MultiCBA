@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jumpscare - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 75vh; }
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(0,0,0,0.9); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
+    }
+    .bar input {
+      background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 7px 12px;
+      border-radius: 6px; font-size: 0.9rem; width: 160px;
+    }
+    .bar button, .bar a {
+      background: #330000; color: #ff4444; border: 1px solid #ff2222; padding: 7px 14px;
+      border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none;
+    }
+    .bar button:hover, .bar a:hover { background: #ff2222; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Jumpscare · 7s</span>
+    <input type="text" id="customText" value="BEHIND YOU" maxlength="24" placeholder="Scare text">
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+    let scared = false;
+    let text = 'BEHIND YOU';
+    document.getElementById('customText').oninput = (e) => { text = e.target.value || 'BEHIND YOU'; };
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function scream() {
+      if (actx.state === 'suspended') actx.resume();
+      // harsh noise burst
+      const bs = actx.sampleRate * 0.8;
+      const buf = actx.createBuffer(1, bs, actx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bs);
+      const n = actx.createBufferSource(); n.buffer = buf;
+      const g = actx.createGain();
+      g.gain.setValueAtTime(0.35, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.8);
+      const f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 800;
+      n.connect(f); f.connect(g); g.connect(actx.destination); n.start();
+      // low roar
+      const o = actx.createOscillator(), g2 = actx.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(80, actx.currentTime);
+      o.frequency.linearRampToValueAtTime(40, actx.currentTime + 0.6);
+      g2.gain.setValueAtTime(0.25, actx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.7);
+      o.connect(g2); g2.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 0.75);
+    }
+
+    function drawFace(x, y, scale) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+      // head
+      ctx.fillStyle = '#1a0a0a';
+      ctx.beginPath(); ctx.ellipse(0, 0, 70, 85, 0, 0, Math.PI * 2); ctx.fill();
+      // eyes white
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.ellipse(-25, -15, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(25, -15, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
+      // pupils
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.arc(-25, -10, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(25, -10, 8, 0, Math.PI * 2); ctx.fill();
+      // mouth
+      ctx.strokeStyle = '#a00';
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(0, 25, 30, 0.2, Math.PI - 0.2); ctx.stroke();
+      // teeth
+      ctx.fillStyle = '#ddd';
+      for (let i = -3; i <= 3; i++) {
+        ctx.fillRect(i * 8 - 3, 20, 6, 12);
+      }
+      ctx.restore();
+    }
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 640, 360);
+
+      if (t < 4.5) {
+        // calm fake boot
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, 640, 360);
+        ctx.fillStyle = '#333';
+        ctx.font = '18px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('System starting...', 320, 160);
+        ctx.fillStyle = '#222';
+        ctx.fillRect(220, 200, 200, 6);
+        ctx.fillStyle = '#0a5';
+        ctx.fillRect(220, 200, 200 * Math.min(1, t / 4.2), 6);
+      } else {
+        // JUMPSCARE
+        if (!scared) { scared = true; scream(); }
+        // flash
+        const flash = Math.sin(t * 40) > 0.3;
+        ctx.fillStyle = flash ? '#200' : '#000';
+        ctx.fillRect(0, 0, 640, 360);
+        drawFace(320 + (Math.random() - 0.5) * 8, 160 + (Math.random() - 0.5) * 6, 1.4 + Math.sin(t * 20) * 0.05);
+        ctx.fillStyle = '#f00';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, 320 + (Math.random() - 0.5) * 4, 320);
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      t = 0; scared = false; // restart for clean record
+      try {
+        await MultiCBADownload(canvas, 7, 'jumpscare');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
