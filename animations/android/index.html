@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Bounce - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: radial-gradient(circle at center, #1a3a1a, #000);
+      height: 100vh; display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .android {
+      width: 120px; height: 120px;
+      background: #3ddc84;
+      border-radius: 50% 50% 42% 42%;
+      position: relative;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .android::before {
+      content: ''; position: absolute;
+      top: -28px; left: 50%; transform: translateX(-50%);
+      width: 70px; height: 36px;
+      border: 9px solid #3ddc84; border-bottom: none;
+      border-radius: 60px 60px 0 0;
+    }
+    .android::after {
+      content: ''; position: absolute;
+      top: 32px; left: 26px;
+      width: 14px; height: 14px; background: #000; border-radius: 50%;
+      box-shadow: 50px 0 0 #000;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.06); }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #3ddc84; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #3ddc84; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="android"></div>
+  <div class="info">Android Bounce · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function tone(f, d, v=0.13, delay=0) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, ctx.currentTime + delay);
+      g.gain.linearRampToValueAtTime(v, ctx.currentTime + delay + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + d);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + d + 0.05);
+    }
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      tone(523, 0.2); tone(659, 0.25, 0.11, 0.2); tone(784, 0.35, 0.11, 0.4);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 5000);
+  </script>
+</body>
+</html>
