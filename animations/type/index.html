@@ -1,78 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Typewriter - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0a0a0a; height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
-      font-family: monospace; font-size: clamp(1.2rem, 4vw, 1.8rem); color: #00ff88;
-    }
-    .cursor {
-      display: inline-block; width: 10px; height: 1.2em;
-      background: #00ff88; margin-left: 3px;
-      animation: blink 0.7s step-end infinite;
-    }
-    @keyframes blink { 50% { opacity: 0; } }
-    .bar {
-      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
-      background: rgba(0,0,0,0.85); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
-      font-family: system-ui, sans-serif; font-size: 0.9rem;
-    }
-    .bar input {
-      background: #1a1a1a; border: 1px solid #00ff88; color: #fff; padding: 7px 12px;
-      border-radius: 6px; width: 200px;
-    }
-    .bar a {
-      background: #0a1a0a; color: #00ff88; border: 1px solid #00ff88; padding: 7px 14px;
-      border-radius: 6px; text-decoration: none;
-    }
-    .bar span { color: #666; }
-    body.preview .bar { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typewriter - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0a;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;font-family:system-ui,sans-serif}.bar input{background:#1a1a1a;border:1px solid #0f8;color:#fff;padding:7px 12px;border-radius:6px;width:220px;font-size:.85rem}.bar button,.bar a{background:#021;color:#0f8;border:1px solid #0f8;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div><span id="text">Booting</span><span class="cursor"></span></div>
-  <div class="bar">
-    <span>Typewriter · Edit lines (comma separated):</span>
-    <input type="text" id="customText" value="Booting, Loading modules, Starting services, Ready" placeholder="line1, line2, line3">
-    <a href="../../index.html">← Gallery</a>
-  </div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    let texts = ['Booting', 'Loading modules', 'Starting services', 'Ready'];
-    let i = 0;
-    const el = document.getElementById('text');
-
-    document.getElementById('customText').oninput = (e) => {
-      texts = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-      if (!texts.length) texts = ['Booting'];
-      i = 0;
-      el.textContent = texts[0];
-    };
-
-    setInterval(() => {
-      i = (i + 1) % texts.length;
-      el.textContent = texts[i];
-    }, 1200);
-
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      for (let j = 0; j < 4; j++) {
-        const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = 550 + Math.random() * 100;
-        g.gain.setValueAtTime(0.05, ctx.currentTime + j * 0.1);
-        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + j * 0.1 + 0.06);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(ctx.currentTime + j * 0.1); o.stop(ctx.currentTime + j * 0.1 + 0.08);
-      }
-    }
-    setTimeout(play, 300);
-    setInterval(play, 2500);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Typewriter · 5s</span><input id="txt" value="Booting, Loading, Ready"><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let texts=['Booting','Loading','Ready'];document.getElementById('txt').oninput=e=>{texts=e.target.value.split(',').map(s=>s.trim()).filter(Boolean);if(!texts.length)texts=['Booting'];};
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,640,360);
+const idx=Math.floor(t/1.2)%texts.length;const line=texts[idx];ctx.fillStyle='#00ff88';ctx.font='28px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(line,320,180);
+if(Math.floor(t*2)%2===0)ctx.fillRect(320+ctx.measureText(line).width/2+4,165,10,28);
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();for(let i=0;i<4;i++){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=550+Math.random()*80;g.gain.setValueAtTime(0.05,actx.currentTime+i*0.08);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+i*0.08+0.05);o.connect(g);g.connect(actx.destination);o.start(actx.currentTime+i*0.08);o.stop(actx.currentTime+i*0.08+0.07);}}
+setTimeout(snd,300);setInterval(snd,2500);
+MultiCBABindDownload('dl',canvas,5,'typewriter');
+</script></body></html>
