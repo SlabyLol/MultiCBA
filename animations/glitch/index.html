@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glitch Text - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d0d0d; height: 100vh;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .glitch {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: clamp(2.5rem, 10vw, 5rem);
+      font-weight: 700; color: #fff; position: relative;
+      animation: glitch 2s infinite;
+      letter-spacing: 4px;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    }
+    .glitch::before {
+      color: #0ff; animation: gTop 1.5s infinite;
+      clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+    }
+    .glitch::after {
+      color: #f0f; animation: gBot 1.8s infinite;
+      clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+    }
+    @keyframes glitch {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(-3px, 1px); }
+      94% { transform: translate(3px, -1px); }
+      96% { transform: translate(-2px, 2px); }
+    }
+    @keyframes gTop {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(4px, -1px); }
+      94% { transform: translate(-4px, 1px); }
+    }
+    @keyframes gBot {
+      0%, 90%, 100% { transform: translate(0); }
+      93% { transform: translate(-4px, 0); }
+      95% { transform: translate(4px, 1px); }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="glitch" data-text="SYSTEM">SYSTEM</div>
+  <div class="info">Glitch Text · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      // noise
+      const bs = ctx.sampleRate * 0.12;
+      const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
+      const n = ctx.createBufferSource(); n.buffer = buf;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.12, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      n.connect(g); g.connect(ctx.destination); n.start();
+      // low tone
+      const o = ctx.createOscillator(), g2 = ctx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = 120;
+      g2.gain.setValueAtTime(0.1, ctx.currentTime + 0.1);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      o.connect(g2); g2.connect(ctx.destination);
+      o.start(ctx.currentTime + 0.1); o.stop(ctx.currentTime + 0.4);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 2000);
+  </script>
+</body>
+</html>
