@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core Pulse - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #05050f; height: 100vh;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .core {
+      width: 60px; height: 60px;
+      background: radial-gradient(circle, #00f0ff, transparent 70%);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 40px #00f0ff, 0 0 80px #ff00aa, 0 0 120px #00f0ff;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.7); opacity: 0.6; }
+      50% { transform: scale(1.4); opacity: 1; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="core"></div>
+  <div class="info">Core Pulse · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 110;
+      g.gain.setValueAtTime(0.12, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 1.25);
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.type = 'sine'; o2.frequency.value = 220;
+      g2.gain.setValueAtTime(0.06, ctx.currentTime + 0.1);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.1);
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.start(ctx.currentTime + 0.1); o2.stop(ctx.currentTime + 1.15);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 4000);
+  </script>
+</body>
+</html>
