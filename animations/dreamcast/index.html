@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dreamcast Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.85); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .bar button, .bar a { background: #222; color: #ff6600; border: 1px solid #ff6600; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #ff6600; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Dreamcast · 5s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, 640, 360);
+
+      // swirl / swirl logo energy
+      const s = Math.min(1, t / 1.2);
+      ctx.save();
+      ctx.translate(320, 150);
+      ctx.scale(s, s);
+      for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.strokeStyle = `hsla(${20 + i * 15}, 100%, 55%, ${0.4 + 0.1 * i})`;
+        ctx.lineWidth = 4;
+        ctx.arc(0, 0, 20 + i * 12, t * 2 + i, t * 2 + i + Math.PI * 1.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (t > 1.5) {
+        const a = Math.min(1, (t - 1.5) / 0.6);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#ff6600';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('DREAMCAST', 320, 250);
+        ctx.globalAlpha = 1;
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      [262, 330, 392, 523].forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, actx.currentTime + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.12 + 0.4);
+        o.connect(g); g.connect(actx.destination);
+        o.start(actx.currentTime + i * 0.12); o.stop(actx.currentTime + i * 0.12 + 0.45);
+      });
+    }
+    setTimeout(bootSound, 400);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 5, 'dreamcast-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
