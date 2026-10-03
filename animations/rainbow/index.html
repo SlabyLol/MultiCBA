@@ -1,51 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rainbow Sweep - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; height: 100vh; overflow: hidden; position: relative; }
-    .bar {
-      position: absolute; top: 0; bottom: 0; width: 45%;
-      background: linear-gradient(90deg,
-        transparent, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, transparent);
-      animation: sweep 2.5s linear infinite;
-      filter: blur(12px); opacity: 0.75;
-    }
-    @keyframes sweep {
-      0% { left: -45%; }
-      100% { left: 100%; }
-    }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #aaa; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rainbow Sweep - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="bar"></div>
-  <div class="info">Rainbow Sweep · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(300, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(1000, ctx.currentTime + 1.6);
-      g.gain.setValueAtTime(0.1, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.6);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 1.65);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 5000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Rainbow Sweep · 5s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#000';ctx.fillRect(0,0,640,360);
+const x=((t*0.4)%1.4)*640-100;const g=ctx.createLinearGradient(x,0,x+200,0);g.addColorStop(0,'transparent');g.addColorStop(0.15,'#f00');g.addColorStop(0.3,'#ff0');g.addColorStop(0.45,'#0f0');g.addColorStop(0.6,'#0ff');g.addColorStop(0.75,'#00f');g.addColorStop(0.9,'#f0f');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.filter='blur(12px)';ctx.fillRect(0,0,640,360);ctx.filter='none';
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.frequency.setValueAtTime(300,actx.currentTime);o.frequency.linearRampToValueAtTime(900,actx.currentTime+1.4);g.gain.setValueAtTime(0.1,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+1.4);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+1.45);}
+setTimeout(snd,300);setInterval(snd,5000);
+MultiCBABindDownload('dl',canvas,5,'rainbow-sweep');
+</script></body></html>
