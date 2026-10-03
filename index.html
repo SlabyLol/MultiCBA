@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MultiCBA - Multi Custom Boot Animations</title>
+  <meta name="description" content="Preview and download many custom Android-style boot animations with sound. Free collection of stylish startup animations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card: #12121a;
+      --card-hover: #1a1a26;
+      --accent: #00f0ff;
+      --accent2: #ff00aa;
+      --text: #e8e8f0;
+      --muted: #8888a0;
+      --success: #00ff88;
+      --radius: 16px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Animated background */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      background: linear-gradient(180deg, rgba(0,240,255,0.08) 0%, transparent 100%);
+    }
+
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid rgba(0,240,255,0.2);
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+    }
+
+    .stat strong { color: var(--accent); }
+
+    .controls {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 0 1.5rem 2rem;
+    }
+
+    .search-box {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 0.75rem 1.25rem;
+      color: var(--text);
+      font-size: 1rem;
+      width: min(320px, 100%);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus { border-color: var(--accent); }
+
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      border-color: var(--accent);
+      background: rgba(0,240,255,0.1);
+      color: var(--accent);
+    }
+
+    .grid {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 0 1.5rem 4rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,240,255,0.3);
+      box-shadow: 0 12px 40px rgba(0,240,255,0.1);
+    }
+
+    .preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preview-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity 0.3s;
+      z-index: 5;
+      cursor: pointer;
+    }
+
+    .card.playing .preview-overlay { opacity: 0; pointer-events: none; }
+
+    .play-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(0,240,255,0.2);
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: var(--accent);
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .preview-overlay:hover .play-icon {
+      transform: scale(1.1);
+      background: rgba(0,240,255,0.35);
+    }
+
+    .info {
+      padding: 1.1rem 1.25rem 1.25rem;
+    }
+
+    .info h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.5px;
+    }
+
+    .meta {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .meta .duration { color: var(--accent); }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.65rem 0.8rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .btn-preview {
+      background: rgba(0,240,255,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(0,240,255,0.3);
+    }
+
+    .btn-preview:hover { background: rgba(0,240,255,0.25); }
+
+    .btn-download {
+      background: linear-gradient(135deg, var(--accent2), #ff4488);
+      color: white;
+    }
+
+    .btn-download:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ========== BOOT ANIMATION STYLES ========== */
+
+    /* 1. Neon Pulse */
+    .anim-neon {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .anim-neon .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--accent);
+      animation: neonPulse 1.5s ease-in-out infinite;
+      text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent);
+    }
+    @keyframes neonPulse {
+      0%, 100% { opacity: 0.6; filter: brightness(0.8); }
+      50% { opacity: 1; filter: brightness(1.4); }
+    }
+
+    /* 2. Matrix Rain */
+    .anim-matrix { background: #000; overflow: hidden; }
+    .matrix-col {
+      position: absolute;
+      top: -100%;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 14px;
+      line-height: 1.2;
+      animation: matrixFall linear infinite;
+      opacity: 0.8;
+    }
+    @keyframes matrixFall {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(200%); }
+    }
+
+    /* 3. Android Bounce */
+    .anim-android {
+      background: radial-gradient(circle at center, #1a3a1a, #000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .android-logo {
+      width: 80px;
+      height: 80px;
+      background: #3ddc84;
+      border-radius: 50% 50% 45% 45%;
+      position: relative;
+      animation: androidBounce 1.2s ease-in-out infinite;
+    }
+    .android-logo::before {
+      content: '';
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 25px;
+      border: 6px solid #3ddc84;
+      border-bottom: none;
+      border-radius: 50px 50px 0 0;
+    }
+    .android-logo::after {
+      content: '';
+      position: absolute;
+      top: 22px;
+      left: 18px;
+      width: 10px;
+      height: 10px;
+      background: #000;
+      border-radius: 50%;
+      box-shadow: 34px 0 0 #000;
+    }
+    @keyframes androidBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-18px) scale(1.05); }
+    }
+
+    /* 4. Particle Burst */
+    .anim-particles { background: #050510; overflow: hidden; }
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: particleOut 2s ease-out infinite;
+    }
+    @keyframes particleOut {
+      0% { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
+    /* 5. Loading Ring */
+    .anim-ring {
+      background: #0a0a12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring {
+      width: 70px;
+      height: 70px;
+      border: 4px solid transparent;
+      border-top-color: var(--accent);
+      border-right-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    .ring::after {
+      content: '';
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border: 3px solid transparent;
+      border-bottom-color: var(--success);
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite reverse;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 6. Glitch Text */
+    .anim-glitch {
+      background: #0d0d0d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .glitch-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      position: relative;
+      animation: glitch 2s infinite;
+    }
+    .glitch-text::before, .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .glitch-text::before {
+      color: #0ff;
+      animation: glitchTop 1.5s infinite;
+      clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+    }
+    .glitch-text::after {
+      color: #f0f;
+      animation: glitchBottom 1.8s infinite;
+      clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+    }
+    @keyframes glitch {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(-2px, 1px); }
+      94% { transform: translate(2px, -1px); }
+      96% { transform: translate(-1px, 2px); }
+    }
+    @keyframes glitchTop {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(3px, -1px); }
+      94% { transform: translate(-3px, 1px); }
+    }
+    @keyframes glitchBottom {
+      0%, 90%, 100% { transform: translate(0); }
+      93% { transform: translate(-3px, 0); }
+      95% { transform: translate(3px, 1px); }
+    }
+
+    /* 7. Wave Bars */
+    .anim-wave {
+      background: #080812;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .bar {
+      width: 8px;
+      background: linear-gradient(to top, var(--accent), var(--accent2));
+      border-radius: 4px;
+      animation: wave 1s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%, 100% { height: 20px; }
+      50% { height: 60px; }
+    }
+
+    /* 8. Circle Expand */
+    .anim-circle {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .circle-ring {
+      position: absolute;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      animation: expand 2s ease-out infinite;
+      opacity: 0;
+    }
+    @keyframes expand {
+      0% { width: 10px; height: 10px; opacity: 1; }
+      100% { width: 200px; height: 200px; opacity: 0; }
+    }
+
+    /* 9. Cyber Grid */
+    .anim-cyber {
+      background: #05050a;
+      background-image:
+        linear-gradient(rgba(0,240,255,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.15) 1px, transparent 1px);
+      background-size: 30px 30px;
+      animation: gridMove 4s linear infinite;
+    }
+    @keyframes gridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 30px 30px; }
+    }
+    .cyber-scan {
+      position: absolute;
+      left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scan 2.5s linear infinite;
+      box-shadow: 0 0 15px var(--accent);
+    }
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    /* 10. Logo Reveal */
+    .anim-reveal {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .reveal-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: revealIn 3s ease-out infinite;
+    }
+    @keyframes revealIn {
+      0% { opacity: 0; letter-spacing: 20px; filter: blur(8px); }
+      40% { opacity: 1; letter-spacing: 4px; filter: blur(0); }
+      80% { opacity: 1; }
+      100% { opacity: 0; letter-spacing: 4px; }
+    }
+
+    /* 11. Spinner Dots */
+    .anim-dots {
+      background: #0a0a14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dot {
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: bounceDot 1.2s ease-in-out infinite;
+    }
+    @keyframes bounceDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+      40% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* 12. Fire / Energy */
+    .anim-energy {
+      background: radial-gradient(circle at 50% 80%, #1a0a00, #000);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 20%;
+    }
+    .flame {
+      width: 30px;
+      height: 50px;
+      background: linear-gradient(to top, #ff4400, #ffaa00, transparent);
+      border-radius: 50% 50% 20% 20%;
+      animation: flame 0.6s ease-in-out infinite alternate;
+      filter: blur(1px);
+    }
+    @keyframes flame {
+      0% { height: 40px; transform: scaleX(1); }
+      100% { height: 60px; transform: scaleX(1.1); }
+    }
+
+    /* 13. Binary Stream */
+    .anim-binary {
+      background: #000;
+      overflow: hidden;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--accent);
+      line-height: 1.3;
+      padding: 8px;
+      opacity: 0.7;
+    }
+
+    /* 14. Pulse Heart / Core */
+    .anim-core {
+      background: #05050f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .core {
+      width: 40px;
+      height: 40px;
+      background: radial-gradient(circle, var(--accent), transparent 70%);
+      border-radius: 50%;
+      animation: corePulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 30px var(--accent), 0 0 60px var(--accent2);
+    }
+    @keyframes corePulse {
+      0%, 100% { transform: scale(0.8); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    /* 15. Rainbow Sweep */
+    .anim-rainbow {
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+    .rainbow-bar {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 40%;
+      background: linear-gradient(90deg,
+        transparent,
+        #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, transparent);
+      animation: sweep 2.5s linear infinite;
+      filter: blur(8px);
+      opacity: 0.7;
+    }
+    @keyframes sweep {
+      0% { left: -40%; }
+      100% { left: 100%; }
+    }
+
+    /* 16. Hexagon */
+    .anim-hex {
+      background: #080812;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hex {
+      width: 60px;
+      height: 34px;
+      background: transparent;
+      border-left: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+      position: relative;
+      animation: hexSpin 3s linear infinite;
+    }
+    .hex::before, .hex::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 34px;
+      border-left: 2px solid var(--accent2);
+      border-right: 2px solid var(--accent2);
+    }
+    .hex::before { transform: rotate(60deg); }
+    .hex::after { transform: rotate(-60deg); }
+    @keyframes hexSpin { to { transform: rotate(360deg); } }
+
+    /* 17. Typewriter */
+    .anim-type {
+      background: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: monospace;
+      font-size: 1.1rem;
+      color: var(--success);
+    }
+    .type-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1.2em;
+      background: var(--success);
+      margin-left: 2px;
+      animation: blink 0.8s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* 18. Orbit */
+    .anim-orbit {
+      background: radial-gradient(circle, #0a1020, #000);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .orbit-center {
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 15px var(--accent);
+    }
+    .orbit-path {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 1px solid rgba(0,240,255,0.3);
+      border-radius: 50%;
+      animation: orbit 2s linear infinite;
+    }
+    .orbit-path::after {
+      content: '';
+      position: absolute;
+      top: -5px; left: 50%;
+      width: 10px; height: 10px;
+      background: var(--accent2);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent2);
+    }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+
+    /* 19. Shatter / Fragments */
+    .anim-shatter {
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .frag {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      animation: shatter 2s ease-out infinite;
+    }
+    @keyframes shatter {
+      0% { transform: translate(0,0) rotate(0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(0); opacity: 0; }
+    }
+
+    /* 20. Progress Bar Boot */
+    .anim-progress {
+      background: #0a0a12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .progress-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+    .progress-track {
+      width: 70%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      animation: progress 4s ease-in-out infinite;
+    }
+    @keyframes progress {
+      0% { width: 0%; }
+      70% { width: 100%; }
+      100% { width: 100%; }
+    }
+
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 2rem 1.5rem 3rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 0.9rem 1.5rem;
+      border-radius: 12px;
+      z-index: 100;
+      transition: transform 0.3s;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <header>
+    <h1>MultiCBA</h1>
+    <p>Multi Custom Boot Animations — Preview stylish Android-style startup animations with sound. Download as MP4-ready previews.</p>
+    <div class="stats">
+      <div class="stat"><strong id="anim-count">20</strong> Animations</div>
+      <div class="stat"><strong>With Sound</strong></div>
+      <div class="stat"><strong>Free</strong> to use</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <input type="text" class="search-box" id="search" placeholder="Search animations..." oninput="filterAnims()">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+    <button class="filter-btn" data-filter="short" onclick="setFilter('short')">Short (<5s)</button>
+    <button class="filter-btn" data-filter="long" onclick="setFilter('long')">Long (5s+)</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <p>MultiCBA by <a href="https://github.com/SlabyLol" target="_blank">SlabyLol / DarkFox</a> · Open source on <a href="https://github.com/SlabyLol/MultiCBA" target="_blank">GitHub</a></p>
+    <p style="margin-top:0.5rem;font-size:0.8rem;">These are HTML/CSS previews with generated audio. For real bootanimation.zip files, convert the animations yourself or use tools like abatools.</p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== ANIMATION DATA ==========
+    const animations = [
+      { id: 'neon', name: 'Neon Pulse', duration: 6, res: '1080p', category: 'long', desc: 'Glowing neon logo pulse' },
+      { id: 'matrix', name: 'Matrix Rain', duration: 8, res: '1080p', category: 'long', desc: 'Classic digital rain' },
+      { id: 'android', name: 'Android Bounce', duration: 5, res: '720p', category: 'long', desc: 'Playful Android logo' },
+      { id: 'particles', name: 'Particle Burst', duration: 4, res: '1080p', category: 'short', desc: 'Exploding particles' },
+      { id: 'ring', name: 'Loading Ring', duration: 4, res: '1080p', category: 'short', desc: 'Dual spinning rings' },
+      { id: 'glitch', name: 'Glitch Text', duration: 5, res: '1080p', category: 'long', desc: 'Cyberpunk glitch effect' },
+      { id: 'wave', name: 'Wave Bars', duration: 3, res: '720p', category: 'short', desc: 'Audio-style wave bars' },
+      { id: 'circle', name: 'Circle Expand', duration: 4, res: '1080p', category: 'short', desc: 'Expanding ripple rings' },
+      { id: 'cyber', name: 'Cyber Grid', duration: 7, res: '1080p', category: 'long', desc: 'Scanning cyber grid' },
+      { id: 'reveal', name: 'Logo Reveal', duration: 6, res: '1080p', category: 'long', desc: 'Elegant text reveal' },
+      { id: 'dots', name: 'Spinner Dots', duration: 3, res: '720p', category: 'short', desc: 'Bouncing loading dots' },
+      { id: 'energy', name: 'Energy Flame', duration: 5, res: '1080p', category: 'long', desc: 'Rising energy flames' },
+      { id: 'binary', name: 'Binary Stream', duration: 6, res: '1080p', category: 'long', desc: 'Scrolling binary code' },
+      { id: 'core', name: 'Core Pulse', duration: 4, res: '1080p', category: 'short', desc: 'Pulsing energy core' },
+      { id: 'rainbow', name: 'Rainbow Sweep', duration: 5, res: '1080p', category: 'long', desc: 'Colorful light sweep' },
+      { id: 'hex', name: 'Hexagon Spin', duration: 4, res: '720p', category: 'short', desc: 'Rotating hexagon frame' },
+      { id: 'type', name: 'Typewriter', duration: 5, res: '720p', category: 'long', desc: 'Booting typewriter text' },
+      { id: 'orbit', name: 'Orbit', duration: 4, res: '1080p', category: 'short', desc: 'Planetary orbit motion' },
+      { id: 'shatter', name: 'Shatter', duration: 3, res: '1080p', category: 'short', desc: 'Fragment explosion' },
+      { id: 'progress', name: 'Progress Boot', duration: 7, res: '1080p', category: 'long', desc: 'Classic progress bar boot' }
+    ];
+
+    let currentFilter = 'all';
+    let audioCtx = null;
+    let activeSounds = [];
+
+    function getAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    // ========== SOUND GENERATORS ==========
+    function playTone(freq, duration, type = 'sine', vol = 0.15, delay = 0) {
+      const ctx = getAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + duration + 0.05);
+      activeSounds.push({ osc, gain });
+    }
+
+    function playSweep(startFreq, endFreq, duration, vol = 0.12) {
+      const ctx = getAudio();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(startFreq, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(endFreq, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration + 0.05);
+    }
+
+    function playNoise(duration, vol = 0.08) {
+      const ctx = getAudio();
+      const bufferSize = ctx.sampleRate * duration;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 800;
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      noise.start();
+      noise.stop(ctx.currentTime + duration);
+    }
+
+    function playBootSound(id) {
+      stopAllSounds();
+      switch(id) {
+        case 'neon':
+          playTone(440, 0.3, 'sine', 0.12);
+          playTone(554, 0.4, 'sine', 0.1, 0.15);
+          playTone(659, 0.5, 'sine', 0.1, 0.3);
+          break;
+        case 'matrix':
+          for (let i = 0; i < 8; i++) playTone(200 + Math.random()*400, 0.15, 'square', 0.06, i*0.12);
+          break;
+        case 'android':
+          playTone(523, 0.2, 'sine', 0.14);
+          playTone(659, 0.25, 'sine', 0.12, 0.2);
+          playTone(784, 0.35, 'sine', 0.12, 0.4);
+          break;
+        case 'particles':
+          playNoise(0.4, 0.1);
+          playSweep(800, 200, 0.5, 0.1);
+          break;
+        case 'ring':
+          playTone(300, 0.8, 'triangle', 0.1);
+          playTone(450, 0.6, 'triangle', 0.08, 0.2);
+          break;
+        case 'glitch':
+          playNoise(0.15, 0.12);
+          playTone(150, 0.1, 'sawtooth', 0.1, 0.1);
+          playNoise(0.1, 0.1, 0.25);
+          playTone(90, 0.2, 'square', 0.08, 0.4);
+          break;
+        case 'wave':
+          playTone(220, 0.3, 'sine', 0.1);
+          playTone(330, 0.3, 'sine', 0.1, 0.15);
+          playTone(440, 0.4, 'sine', 0.1, 0.3);
+          break;
+        case 'circle':
+          playSweep(100, 600, 0.8, 0.1);
+          break;
+        case 'cyber':
+          playTone(180, 0.2, 'square', 0.08);
+          for (let i = 0; i < 5; i++) playTone(300 + i*40, 0.1, 'square', 0.05, 0.3 + i*0.15);
+          break;
+        case 'reveal':
+          playSweep(200, 800, 1.2, 0.1);
+          playTone(880, 0.5, 'sine', 0.08, 1.0);
+          break;
+        case 'dots':
+          playTone(400, 0.1, 'sine', 0.1);
+          playTone(400, 0.1, 'sine', 0.1, 0.2);
+          playTone(400, 0.1, 'sine', 0.1, 0.4);
+          break;
+        case 'energy':
+          playNoise(0.6, 0.09);
+          playSweep(150, 80, 0.8, 0.12);
+          break;
+        case 'binary':
+          for (let i = 0; i < 12; i++) playTone(100 + (i%4)*50, 0.08, 'square', 0.04, i*0.1);
+          break;
+        case 'core':
+          playTone(110, 1.2, 'sine', 0.12);
+          playTone(220, 1.0, 'sine', 0.06, 0.1);
+          break;
+        case 'rainbow':
+          playSweep(300, 900, 1.5, 0.1);
+          break;
+        case 'hex':
+          playTone(350, 0.3, 'triangle', 0.1);
+          playTone(525, 0.4, 'triangle', 0.08, 0.25);
+          break;
+        case 'type':
+          for (let i = 0; i < 6; i++) playTone(600 + Math.random()*100, 0.05, 'square', 0.07, i*0.12);
+          break;
+        case 'orbit':
+          playTone(260, 0.8, 'sine', 0.1);
+          playTone(390, 0.6, 'sine', 0.07, 0.3);
+          break;
+        case 'shatter':
+          playNoise(0.3, 0.14);
+          playSweep(1000, 100, 0.4, 0.1);
+          break;
+        case 'progress':
+          playTone(200, 0.3, 'sine', 0.1);
+          playTone(300, 0.3, 'sine', 0.1, 1.5);
+          playTone(400, 0.3, 'sine', 0.1, 3.0);
+          playTone(600, 0.5, 'sine', 0.12, 4.5);
+          break;
+        default:
+          playTone(440, 0.3, 'sine', 0.1);
+      }
+    }
+
+    function stopAllSounds() {
+      activeSounds.forEach(s => {
+        try { s.osc.stop(); } catch(e) {}
+      });
+      activeSounds = [];
+    }
+
+    // ========== BUILD PREVIEWS ==========
+    function buildPreview(id) {
+      const div = document.createElement('div');
+      div.className = 'preview-inner anim-' + id;
+
+      switch(id) {
+        case 'neon':
+          div.innerHTML = '<div class="logo">BOOT</div>';
+          break;
+        case 'matrix':
+          for (let i = 0; i < 18; i++) {
+            const col = document.createElement('div');
+            col.className = 'matrix-col';
+            col.style.left = (i * 5.5) + '%';
+            col.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+            col.style.animationDelay = (Math.random() * 2) + 's';
+            let text = '';
+            for (let j = 0; j < 20; j++) text += String.fromCharCode(0x30A0 + Math.random()*96) + '<br>';
+            col.innerHTML = text;
+            div.appendChild(col);
+          }
+          break;
+        case 'android':
+          div.innerHTML = '<div class="android-logo"></div>';
+          break;
+        case 'particles':
+          for (let i = 0; i < 24; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = '50%';
+            p.style.top = '50%';
+            const angle = (i / 24) * Math.PI * 2;
+            const dist = 80 + Math.random() * 60;
+            p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+            p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+            p.style.animationDelay = (Math.random() * 0.5) + 's';
+            p.style.background = `hsl(${180 + Math.random()*60}, 100%, 60%)`;
+            div.appendChild(p);
+          }
+          break;
+        case 'ring':
+          div.innerHTML = '<div class="ring" style="position:relative"></div>';
+          break;
+        case 'glitch':
+          div.innerHTML = '<div class="glitch-text" data-text="SYSTEM">SYSTEM</div>';
+          break;
+        case 'wave':
+          for (let i = 0; i < 8; i++) {
+            const b = document.createElement('div');
+            b.className = 'bar';
+            b.style.animationDelay = (i * 0.1) + 's';
+            b.style.height = '30px';
+            div.appendChild(b);
+          }
+          break;
+        case 'circle':
+          for (let i = 0; i < 4; i++) {
+            const c = document.createElement('div');
+            c.className = 'circle-ring';
+            c.style.animationDelay = (i * 0.5) + 's';
+            div.appendChild(c);
+          }
+          break;
+        case 'cyber':
+          div.innerHTML = '<div class="cyber-scan"></div>';
+          break;
+        case 'reveal':
+          div.innerHTML = '<div class="reveal-text">MULTICBA</div>';
+          break;
+        case 'dots':
+          for (let i = 0; i < 3; i++) {
+            const d = document.createElement('div');
+            d.className = 'dot';
+            d.style.animationDelay = (i * 0.2) + 's';
+            div.appendChild(d);
+          }
+          break;
+        case 'energy':
+          for (let i = 0; i < 5; i++) {
+            const f = document.createElement('div');
+            f.className = 'flame';
+            f.style.margin = '0 3px';
+            f.style.animationDelay = (i * 0.1) + 's';
+            f.style.height = (40 + Math.random()*20) + 'px';
+            div.appendChild(f);
+          }
+          break;
+        case 'binary':
+          let bin = '';
+          for (let i = 0; i < 12; i++) {
+            for (let j = 0; j < 40; j++) bin += Math.random() > 0.5 ? '1' : '0';
+            bin += '\n';
+          }
+          div.textContent = bin;
+          div.style.whiteSpace = 'pre';
+          div.style.animation = 'matrixFall 8s linear infinite';
+          break;
+        case 'core':
+          div.innerHTML = '<div class="core"></div>';
+          break;
+        case 'rainbow':
+          div.innerHTML = '<div class="rainbow-bar"></div>';
+          break;
+        case 'hex':
+          div.innerHTML = '<div class="hex"></div>';
+          break;
+        case 'type':
+          div.innerHTML = '<span id="type-text-' + id + '">Booting</span><span class="type-cursor"></span>';
+          break;
+        case 'orbit':
+          div.innerHTML = '<div class="orbit-center"></div><div class="orbit-path"></div><div class="orbit-path" style="width:110px;height:110px;animation-duration:3s;animation-direction:reverse"></div>';
+          break;
+        case 'shatter':
+          for (let i = 0; i < 12; i++) {
+            const f = document.createElement('div');
+            f.className = 'frag';
+            f.style.left = 'calc(50% - 10px)';
+            f.style.top = 'calc(50% - 10px)';
+            const angle = (i / 12) * Math.PI * 2;
+            f.style.setProperty('--fx', Math.cos(angle) * 100 + 'px');
+            f.style.setProperty('--fy', Math.sin(angle) * 80 + 'px');
+            f.style.setProperty('--fr', (Math.random()*360) + 'deg');
+            f.style.animationDelay = (Math.random() * 0.3) + 's';
+            div.appendChild(f);
+          }
+          break;
+        case 'progress':
+          div.innerHTML = '<div class="progress-label">STARTING SYSTEM</div><div class="progress-track"><div class="progress-fill"></div></div>';
+          break;
+      }
+      return div;
+    }
+
+    // ========== RENDER CARDS ==========
+    function renderCards() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const q = document.getElementById('search').value.toLowerCase();
+
+      animations.forEach(anim => {
+        if (currentFilter !== 'all' && anim.category !== currentFilter) return;
+        if (q && !anim.name.toLowerCase().includes(q) && !anim.desc.toLowerCase().includes(q)) return;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.id = anim.id;
+
+        const preview = document.createElement('div');
+        preview.className = 'preview';
+        preview.appendChild(buildPreview(anim.id));
+
+        const overlay = document.createElement('div');
+        overlay.className = 'preview-overlay';
+        overlay.innerHTML = '<div class="play-icon">▶</div>';
+        overlay.onclick = () => togglePlay(card, anim);
+        preview.appendChild(overlay);
+
+        const info = document.createElement('div');
+        info.className = 'info';
+        info.innerHTML = `
+          <h3>${anim.name}</h3>
+          <div class="meta">
+            <span class="duration">⏱ ${anim.duration}s</span>
+            <span>📐 ${anim.res}</span>
+            <span>🔊 Sound</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-preview" onclick="togglePlay(this.closest('.card'), animations.find(a=>a.id==='${anim.id}'))">▶ Preview</button>
+            <button class="btn btn-download" onclick="downloadAnim('${anim.id}', '${anim.name}')">⬇ Download MP4</button>
+          </div>
+        `;
+
+        card.appendChild(preview);
+        card.appendChild(info);
+        grid.appendChild(card);
+      });
+    }
+
+    let playingCard = null;
+    let playTimeout = null;
+
+    function togglePlay(card, anim) {
+      // stop previous
+      if (playingCard && playingCard !== card) {
+        playingCard.classList.remove('playing');
+        stopAllSounds();
+        clearTimeout(playTimeout);
+      }
+
+      if (card.classList.contains('playing')) {
+        card.classList.remove('playing');
+        stopAllSounds();
+        clearTimeout(playTimeout);
+        playingCard = null;
+        return;
+      }
+
+      card.classList.add('playing');
+      playingCard = card;
+      playBootSound(anim.id);
+
+      // special typewriter
+      if (anim.id === 'type') {
+        const el = card.querySelector('[id^="type-text"]');
+        if (el) {
+          const texts = ['Booting', 'Loading modules', 'Starting services', 'Ready'];
+          let i = 0;
+          el.textContent = texts[0];
+          const iv = setInterval(() => {
+            i++;
+            if (i >= texts.length || !card.classList.contains('playing')) { clearInterval(iv); return; }
+            el.textContent = texts[i];
+          }, 1200);
+        }
+      }
+
+      playTimeout = setTimeout(() => {
+        card.classList.remove('playing');
+        stopAllSounds();
+        playingCard = null;
+      }, anim.duration * 1000);
+    }
+
+    function downloadAnim(id, name) {
+      showToast('Preparing "' + name + '" as MP4-style download... (preview export)');
+      // Simple canvas export simulation - real MP4 needs MediaRecorder + canvas capture
+      // For now we notify the user and offer a note
+      setTimeout(() => {
+        showToast('Download ready! In a full version this would export the animation as video. Use screen record or convert CSS to frames for now.');
+      }, 1200);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+      renderCards();
+    }
+
+    function filterAnims() { renderCards(); }
+
+    // Init
+    renderCards();
+    document.getElementById('anim-count').textContent = animations.length;
+  </script>
+</body>
+</html>
