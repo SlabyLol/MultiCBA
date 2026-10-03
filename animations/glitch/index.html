@@ -8,10 +8,10 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0d0d0d; height: 100vh;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+      font-family: system-ui, sans-serif;
     }
     .glitch {
-      font-family: 'Segoe UI', system-ui, sans-serif;
       font-size: clamp(2.5rem, 10vw, 5rem);
       font-weight: 700; color: #fff; position: relative;
       animation: glitch 2s infinite;
@@ -45,40 +45,50 @@
       93% { transform: translate(-4px, 0); }
       95% { transform: translate(4px, 1px); }
     }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #888; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(0,0,0,0.85); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
     }
-    .info a { color: #0ff; }
-    body.preview .info { display: none; }
+    .bar input {
+      background: #1a1a1a; border: 1px solid #0ff; color: #fff; padding: 7px 12px;
+      border-radius: 6px; font-size: 0.9rem; width: 160px;
+    }
+    .bar a {
+      background: #0a1a1a; color: #0ff; border: 1px solid #0ff; padding: 7px 14px;
+      border-radius: 6px; text-decoration: none; font-size: 0.9rem;
+    }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
   </style>
 </head>
 <body>
-  <div class="glitch" data-text="SYSTEM">SYSTEM</div>
-  <div class="info">Glitch Text · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <div class="glitch" id="gtext" data-text="SYSTEM">SYSTEM</div>
+  <div class="bar">
+    <span>Glitch Text · 5s · Edit:</span>
+    <input type="text" id="customText" value="SYSTEM" maxlength="16" placeholder="Your text">
+    <a href="../../index.html">← Gallery</a>
+  </div>
   <script>
     if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const g = document.getElementById('gtext');
+    document.getElementById('customText').oninput = (e) => {
+      const v = e.target.value || 'SYSTEM';
+      g.textContent = v;
+      g.setAttribute('data-text', v);
+    };
+
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     function play() {
       if (ctx.state === 'suspended') ctx.resume();
-      // noise
       const bs = ctx.sampleRate * 0.12;
       const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
       const d = buf.getChannelData(0);
       for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
       const n = ctx.createBufferSource(); n.buffer = buf;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.12, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-      n.connect(g); g.connect(ctx.destination); n.start();
-      // low tone
-      const o = ctx.createOscillator(), g2 = ctx.createGain();
-      o.type = 'sawtooth'; o.frequency.value = 120;
-      g2.gain.setValueAtTime(0.1, ctx.currentTime + 0.1);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-      o.connect(g2); g2.connect(ctx.destination);
-      o.start(ctx.currentTime + 0.1); o.stop(ctx.currentTime + 0.4);
+      const g2 = ctx.createGain();
+      g2.gain.setValueAtTime(0.12, ctx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      n.connect(g2); g2.connect(ctx.destination); n.start();
     }
     setTimeout(play, 300);
     setInterval(play, 2000);
