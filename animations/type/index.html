@@ -8,7 +8,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: #0a0a0a; height: 100vh;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
       font-family: monospace; font-size: clamp(1.2rem, 4vw, 1.8rem); color: #00ff88;
     }
     .cursor {
@@ -17,24 +17,43 @@
       animation: blink 0.7s step-end infinite;
     }
     @keyframes blink { 50% { opacity: 0; } }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #00ff88; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-      font-family: system-ui, sans-serif;
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(0,0,0,0.85); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
+      font-family: system-ui, sans-serif; font-size: 0.9rem;
     }
-    .info a { color: #00ff88; }
-    body.preview .info { display: none; }
+    .bar input {
+      background: #1a1a1a; border: 1px solid #00ff88; color: #fff; padding: 7px 12px;
+      border-radius: 6px; width: 200px;
+    }
+    .bar a {
+      background: #0a1a0a; color: #00ff88; border: 1px solid #00ff88; padding: 7px 14px;
+      border-radius: 6px; text-decoration: none;
+    }
+    .bar span { color: #666; }
+    body.preview .bar { display: none; }
   </style>
 </head>
 <body>
-  <span id="text">Booting</span><span class="cursor"></span>
-  <div class="info">Typewriter · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <div><span id="text">Booting</span><span class="cursor"></span></div>
+  <div class="bar">
+    <span>Typewriter · Edit lines (comma separated):</span>
+    <input type="text" id="customText" value="Booting, Loading modules, Starting services, Ready" placeholder="line1, line2, line3">
+    <a href="../../index.html">← Gallery</a>
+  </div>
   <script>
     if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const texts = ['Booting', 'Loading modules', 'Starting services', 'Initializing UI', 'Ready'];
+    let texts = ['Booting', 'Loading modules', 'Starting services', 'Ready'];
     let i = 0;
     const el = document.getElementById('text');
+
+    document.getElementById('customText').oninput = (e) => {
+      texts = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+      if (!texts.length) texts = ['Booting'];
+      i = 0;
+      el.textContent = texts[0];
+    };
+
     setInterval(() => {
       i = (i + 1) % texts.length;
       el.textContent = texts[i];
@@ -43,10 +62,10 @@
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     function play() {
       if (ctx.state === 'suspended') ctx.resume();
-      for (let j = 0; j < 5; j++) {
+      for (let j = 0; j < 4; j++) {
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'square'; o.frequency.value = 550 + Math.random() * 120;
-        g.gain.setValueAtTime(0.06, ctx.currentTime + j * 0.1);
+        o.type = 'square'; o.frequency.value = 550 + Math.random() * 100;
+        g.gain.setValueAtTime(0.05, ctx.currentTime + j * 0.1);
         g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + j * 0.1 + 0.06);
         o.connect(g); g.connect(ctx.destination);
         o.start(ctx.currentTime + j * 0.1); o.stop(ctx.currentTime + j * 0.1 + 0.08);
