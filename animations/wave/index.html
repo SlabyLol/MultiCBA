@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wave Bars - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080812; height: 100vh;
+      display: flex; align-items: center; justify-content: center; gap: 8px; overflow: hidden;
+    }
+    .bar {
+      width: 12px; border-radius: 6px;
+      background: linear-gradient(to top, #00f0ff, #ff00aa);
+      animation: wave 1s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%, 100% { height: 30px; }
+      50% { height: 90px; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    for (let i = 0; i < 10; i++) {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      b.style.animationDelay = (i * 0.1) + 's';
+      b.style.height = '40px';
+      document.body.appendChild(b);
+    }
+  </script>
+  <div class="info">Wave Bars · 3s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      [220, 330, 440].forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.35);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(ctx.currentTime + i * 0.15); o.stop(ctx.currentTime + i * 0.15 + 0.4);
+      });
+    }
+    setTimeout(play, 300);
+    setInterval(play, 3000);
+  </script>
+</body>
+</html>
