@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hexagon Spin - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #080812; height: 100vh;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .hex {
+      width: 80px; height: 46px;
+      background: transparent;
+      border-left: 3px solid #00f0ff;
+      border-right: 3px solid #00f0ff;
+      position: relative;
+      animation: spin 3s linear infinite;
+    }
+    .hex::before, .hex::after {
+      content: ''; position: absolute;
+      width: 80px; height: 46px;
+      border-left: 3px solid #ff00aa;
+      border-right: 3px solid #ff00aa;
+    }
+    .hex::before { transform: rotate(60deg); }
+    .hex::after { transform: rotate(-60deg); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="hex"></div>
+  <div class="info">Hexagon Spin · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = 350;
+      g.gain.setValueAtTime(0.1, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.4);
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.type = 'triangle'; o2.frequency.value = 525;
+      g2.gain.setValueAtTime(0.08, ctx.currentTime + 0.25);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.start(ctx.currentTime + 0.25); o2.stop(ctx.currentTime + 0.7);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 4000);
+  </script>
+</body>
+</html>
