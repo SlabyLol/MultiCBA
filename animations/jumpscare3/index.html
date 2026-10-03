@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Door Jumpscare - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 75vh; }
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(0,0,0,0.9); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
+    }
+    .bar input { background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 7px 12px; border-radius: 6px; width: 150px; }
+    .bar button, .bar a { background: #330000; color: #ff4444; border: 1px solid #ff2222; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #ff2222; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Door Jumpscare · 6s</span>
+    <input type="text" id="customText" value="GOTCHA" maxlength="20" placeholder="Scare text">
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0, fired = false;
+    let text = 'GOTCHA';
+    document.getElementById('customText').oninput = (e) => { text = e.target.value || 'GOTCHA'; };
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function scare() {
+      if (actx.state === 'suspended') actx.resume();
+      const bs = actx.sampleRate * 0.7;
+      const buf = actx.createBuffer(1, bs, actx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bs * 0.25));
+      const n = actx.createBufferSource(); n.buffer = buf;
+      const g = actx.createGain(); g.gain.value = 0.35;
+      n.connect(g); g.connect(actx.destination); n.start();
+    }
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, 640, 360);
+
+      if (t < 3.8) {
+        // dark hallway + closed door
+        ctx.fillStyle = '#111';
+        ctx.fillRect(220, 40, 200, 280);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(220, 40, 200, 280);
+        // door handle
+        ctx.fillStyle = '#555';
+        ctx.beginPath(); ctx.arc(390, 180, 8, 0, Math.PI * 2); ctx.fill();
+        // floor perspective lines
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.beginPath(); ctx.moveTo(0, 360); ctx.lineTo(220, 320); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(640, 360); ctx.lineTo(420, 320); ctx.stroke();
+        ctx.fillStyle = '#333';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Do not open...', 320, 30);
+      } else {
+        if (!fired) { fired = true; scare(); }
+        // door swings open - face
+        ctx.fillStyle = '#200';
+        ctx.fillRect(0, 0, 640, 360);
+        // face
+        ctx.fillStyle = '#1a0505';
+        ctx.beginPath(); ctx.ellipse(320, 160, 100, 120, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(280, 130, 25, 30, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(360, 130, 25, 30, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(280, 135, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(360, 135, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#a00';
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(320, 200, 40, 0.1, Math.PI - 0.1); ctx.stroke();
+        ctx.fillStyle = '#f00';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, 320 + (Math.random()-0.5)*6, 320);
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      t = 0; fired = false;
+      try {
+        await MultiCBADownload(canvas, 6, 'door-jumpscare');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
