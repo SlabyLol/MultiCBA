@@ -1,68 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Grid - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #05050a; height: 100vh; overflow: hidden; position: relative;
-      background-image:
-        linear-gradient(rgba(0,240,255,0.12) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,240,255,0.12) 1px, transparent 1px);
-      background-size: 40px 40px;
-      animation: gridMove 4s linear infinite;
-    }
-    @keyframes gridMove {
-      0% { background-position: 0 0; }
-      100% { background-position: 40px 40px; }
-    }
-    .scan {
-      position: absolute; left: 0; right: 0; height: 4px;
-      background: linear-gradient(90deg, transparent, #00f0ff, transparent);
-      box-shadow: 0 0 20px #00f0ff;
-      animation: scan 2.5s linear infinite;
-    }
-    @keyframes scan {
-      0% { top: 0; }
-      100% { top: 100%; }
-    }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #00f0ff; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Grid - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#05050a;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="scan"></div>
-  <div class="info">Cyber Grid · 7s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'square'; o.frequency.value = 180;
-      g.gain.setValueAtTime(0.07, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.25);
-      for (let i = 0; i < 5; i++) {
-        const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-        o2.type = 'square'; o2.frequency.value = 280 + i * 45;
-        g2.gain.setValueAtTime(0.04, ctx.currentTime + 0.3 + i * 0.12);
-        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3 + i * 0.12 + 0.1);
-        o2.connect(g2); g2.connect(ctx.destination);
-        o2.start(ctx.currentTime + 0.3 + i * 0.12);
-        o2.stop(ctx.currentTime + 0.3 + i * 0.12 + 0.15);
-      }
-    }
-    setTimeout(play, 300);
-    setInterval(play, 2500);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Cyber Grid · 7s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#05050a';ctx.fillRect(0,0,640,360);
+const off=(t*20)%40;ctx.strokeStyle='rgba(0,240,255,0.15)';ctx.lineWidth=1;
+for(let x=-40;x<680;x+=40){ctx.beginPath();ctx.moveTo(x+off,0);ctx.lineTo(x+off,360);ctx.stroke();}
+for(let y=-40;y<400;y+=40){ctx.beginPath();ctx.moveTo(0,y+off);ctx.lineTo(640,y+off);ctx.stroke();}
+const sy=(t*80)%360;ctx.fillStyle='rgba(0,240,255,0.5)';ctx.fillRect(0,sy,640,3);ctx.shadowColor='#0ff';ctx.shadowBlur=10;ctx.fillRect(0,sy,640,2);ctx.shadowBlur=0;
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=180;g.gain.setValueAtTime(0.06,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+0.2);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+0.25);}
+setTimeout(snd,300);setInterval(snd,2500);
+MultiCBABindDownload('dl',canvas,7,'cyber-grid');
+</script></body></html>
