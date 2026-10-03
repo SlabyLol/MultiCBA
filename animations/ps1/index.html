@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PS1 Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px;
+      background: rgba(0,0,0,0.85); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap;
+    }
+    .bar button, .bar a {
+      background: #003087; color: #fff; border: 1px solid #00a0e3; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none;
+    }
+    .bar button:hover, .bar a:hover { background: #00a0e3; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>PS1 Boot · 6s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    // PS1-style: black → white flash → "Sony Computer Entertainment" style text + simple logo pulse
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 640, 360);
+
+      // early white flash
+      if (t < 0.4) {
+        const a = 1 - t / 0.4;
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.fillRect(0, 0, 640, 360);
+      }
+
+      // logo circle (PS-style)
+      const pulse = 0.7 + 0.3 * Math.sin(t * 3);
+      ctx.beginPath();
+      ctx.arc(320, 150, 40 * pulse, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0,160,227,${0.5 + 0.5 * pulse})`;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(320, 150, 22 * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,48,135,${pulse})`;
+      ctx.fill();
+
+      // text
+      if (t > 0.8) {
+        const a = Math.min(1, (t - 0.8) / 0.6);
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SONY', 320, 230);
+        ctx.font = '14px sans-serif';
+        ctx.fillStyle = `rgba(0,160,227,${a})`;
+        ctx.fillText('COMPUTER ENTERTAINMENT', 320, 255);
+      }
+
+      // bottom line
+      if (t > 1.5) {
+        ctx.fillStyle = 'rgba(0,160,227,0.6)';
+        ctx.fillRect(200, 300, 240 * Math.min(1, (t - 1.5) / 2), 3);
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    // sound
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(200, actx.currentTime);
+      o.frequency.linearRampToValueAtTime(600, actx.currentTime + 0.8);
+      g.gain.setValueAtTime(0.12, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 1.2);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 1.3);
+    }
+    setTimeout(bootSound, 400);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 6, 'ps1-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) {
+        btn.textContent = 'Error – try again';
+        console.error(e);
+      }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
