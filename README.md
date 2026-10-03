@@ -2,44 +2,73 @@
 
 **Multi Custom Boot Animations**
 
-A beautiful collection of 20+ custom Android-style boot animations with live HTML previews, sound effects, duration info and download buttons.
+A collection of 20 custom Android-style boot animations.  
+**Every animation lives in its own folder with its own files.**
+
+## Structure
+
+```
+MultiCBA/
+├── index.html              ← Main gallery
+├── README.md
+└── animations/
+    ├── neon/
+    │   └── index.html      ← Neon Pulse (standalone + sound)
+    ├── matrix/
+    │   └── index.html
+    ├── android/
+    │   └── index.html
+    ├── particles/
+    ├── ring/
+    ├── glitch/
+    ├── wave/
+    ├── circle/
+    ├── cyber/
+    ├── reveal/
+    ├── dots/
+    ├── energy/
+    ├── binary/
+    ├── core/
+    ├── rainbow/
+    ├── hex/
+    ├── type/
+    ├── orbit/
+    ├── shatter/
+    └── progress/
+```
 
 ## Live Demo
 
-Once GitHub Pages is enabled:  
+After enabling GitHub Pages:  
 **https://slabylol.github.io/MultiCBA/**
 
 ## Features
 
-- 20 unique boot animations (Neon Pulse, Matrix Rain, Android Bounce, Glitch, Cyber Grid, Progress Boot and many more)
-- Live preview with one click
-- Generated sound effects for every animation (Web Audio API)
-- Shows duration and resolution
-- Search and filter (short / long)
-- Modern dark UI with Orbitron + Inter fonts
-- Fully static – works on GitHub Pages
+- 20 unique boot animations
+- Each animation = own folder + own `index.html`
+- Live preview in the gallery (iframe)
+- Fullscreen mode with sound (Web Audio API)
+- Duration + resolution shown
+- Search & filter
+- Fully static – perfect for GitHub Pages
 
-## How to enable GitHub Pages
+## Enable GitHub Pages
 
-1. Go to the repository: https://github.com/SlabyLol/MultiCBA
-2. Click **Settings** → **Pages**
-3. Under **Source** select **Deploy from a branch**
+1. Go to https://github.com/SlabyLol/MultiCBA
+2. **Settings** → **Pages**
+3. Source: **Deploy from a branch**
 4. Branch: `main` / folder: `/ (root)`
-5. Click **Save**
-6. After 1–2 minutes the site will be live at:  
-   https://slabylol.github.io/MultiCBA/
+5. Save
 
-## Note about Download as MP4
+Site will be available at: https://slabylol.github.io/MultiCBA/
 
-The current version shows a toast notification for the download button.  
-True MP4 export of the CSS animations would require canvas recording + MediaRecorder (can be added later).  
-For real `bootanimation.zip` files you can convert the animations to frames with tools such as [abatools](https://github.com/threadreaper/abatools).
+## Download as MP4
 
-## Tech
-
-- Pure HTML + CSS + Vanilla JS
-- Web Audio API for procedural sounds
-- No external dependencies except Google Fonts
+The Download button currently shows a helpful note.  
+To get a real video:
+1. Open any animation fullscreen
+2. Use screen recording, or
+3. Convert the HTML/CSS animation to frames and pack a `bootanimation.zip`
 
 ---
 
