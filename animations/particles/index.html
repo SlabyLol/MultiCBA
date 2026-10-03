@@ -1,74 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Particle Burst - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #050510; height: 100vh; overflow: hidden; position: relative; }
-    .particle {
-      position: absolute; width: 8px; height: 8px; border-radius: 50%;
-      left: 50%; top: 50%;
-      animation: out 2s ease-out infinite;
-    }
-    @keyframes out {
-      0% { transform: translate(0,0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-    }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #00f0ff; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050510;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="info">Particle Burst · 4s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const body = document.body;
-    for (let i = 0; i < 36; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const angle = (i / 36) * Math.PI * 2;
-      const dist = 120 + Math.random() * 100;
-      p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
-      p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
-      p.style.animationDelay = (Math.random() * 0.6) + 's';
-      p.style.background = `hsl(${180 + Math.random() * 80}, 100%, 60%)`;
-      body.appendChild(p);
-    }
-
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      // noise burst
-      const bufferSize = ctx.sampleRate * 0.4;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.1, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-      noise.connect(g); g.connect(ctx.destination);
-      noise.start();
-      // sweep
-      const o = ctx.createOscillator(), g2 = ctx.createGain();
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(900, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.5);
-      g2.gain.setValueAtTime(0.1, ctx.currentTime);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      o.connect(g2); g2.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.55);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 4000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Particle Burst · 4s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const parts=[];for(let i=0;i<40;i++){const a=(i/40)*Math.PI*2;parts.push({a,sp:1.5+Math.random(),hue:180+Math.random()*80,ph:Math.random()*2});}
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#050510';ctx.fillRect(0,0,640,360);
+const cycle=(t%2);parts.forEach(p=>{const d=cycle*p.sp*70;const x=320+Math.cos(p.a)*d;const y=180+Math.sin(p.a)*d;const alpha=1-cycle;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=`hsla(${p.hue},100%,60%,${alpha})`;ctx.fill();});
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(800,actx.currentTime);o.frequency.linearRampToValueAtTime(120,actx.currentTime+0.4);g.gain.setValueAtTime(0.1,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+0.4);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+0.45);}
+setTimeout(snd,300);setInterval(snd,4000);
+MultiCBABindDownload('dl',canvas,4,'particle-burst');
+</script>
+</body></html>
