@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow Sweep - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; position: relative; }
+    .bar {
+      position: absolute; top: 0; bottom: 0; width: 45%;
+      background: linear-gradient(90deg,
+        transparent, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, transparent);
+      animation: sweep 2.5s linear infinite;
+      filter: blur(12px); opacity: 0.75;
+    }
+    @keyframes sweep {
+      0% { left: -45%; }
+      100% { left: 100%; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #aaa; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bar"></div>
+  <div class="info">Rainbow Sweep · 5s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(300, ctx.currentTime);
+      o.frequency.linearRampToValueAtTime(1000, ctx.currentTime + 1.6);
+      g.gain.setValueAtTime(0.1, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.6);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 1.65);
+    }
+    setTimeout(play, 300);
+    setInterval(play, 5000);
+  </script>
+</body>
+</html>
