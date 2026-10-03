@@ -1,12 +1,14 @@
 /**
- * MultiCBA – Real video download helper
- * Records a canvas for `duration` seconds and triggers a WebM download.
- * Browsers support WebM natively; convert to MP4 with any free tool if needed.
+ * MultiCBA – Real video download (canvas → WebM via MediaRecorder)
  */
-window.MultiCBADownload = function (canvas, durationSec, filename) {
+window.MultiCBADownload = function (canvas, durationSec, filename, onProgress) {
   return new Promise((resolve, reject) => {
     if (!canvas || !canvas.captureStream) {
-      reject(new Error('Canvas capture not supported'));
+      reject(new Error('Canvas capture not supported in this browser'));
+      return;
+    }
+    if (typeof MediaRecorder === 'undefined') {
+      reject(new Error('MediaRecorder not supported'));
       return;
     }
 
@@ -18,7 +20,7 @@ window.MultiCBADownload = function (canvas, durationSec, filename) {
     const chunks = [];
     let recorder;
     try {
-      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4000000 });
+      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 5000000 });
     } catch (e) {
       recorder = new MediaRecorder(stream);
     }
@@ -28,7 +30,7 @@ window.MultiCBADownload = function (canvas, durationSec, filename) {
     };
 
     recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: mime.split(';')[0] });
+      const blob = new Blob(chunks, { type: (mime.split(';')[0] || 'video/webm') });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -36,16 +38,40 @@ window.MultiCBADownload = function (canvas, durationSec, filename) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      resolve();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      resolve(blob);
     };
 
     recorder.onerror = (e) => reject(e.error || e);
 
+    if (onProgress) onProgress('recording');
     recorder.start(100);
+
     setTimeout(() => {
       if (recorder.state === 'recording') recorder.stop();
-      stream.getTracks().forEach(t => t.stop());
-    }, (durationSec || 5) * 1000);
+      stream.getTracks().forEach((t) => t.stop());
+      if (onProgress) onProgress('done');
+    }, Math.max(1, durationSec || 5) * 1000);
   });
+};
+
+window.MultiCBABindDownload = function (btnId, canvas, durationSec, filename) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.onclick = async function () {
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Recording…';
+    try {
+      await MultiCBADownload(canvas, durationSec, filename);
+      btn.textContent = 'Downloaded!';
+    } catch (e) {
+      console.error(e);
+      btn.textContent = 'Error – try Chrome/Firefox';
+    }
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = label;
+    }, 2200);
+  };
 };
