@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Grid - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #05050a; height: 100vh; overflow: hidden; position: relative;
+      background-image:
+        linear-gradient(rgba(0,240,255,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridMove 4s linear infinite;
+    }
+    @keyframes gridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+    .scan {
+      position: absolute; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+      box-shadow: 0 0 20px #00f0ff;
+      animation: scan 2.5s linear infinite;
+    }
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #00f0ff; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="scan"></div>
+  <div class="info">Cyber Grid · 7s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = 180;
+      g.gain.setValueAtTime(0.07, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.25);
+      for (let i = 0; i < 5; i++) {
+        const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+        o2.type = 'square'; o2.frequency.value = 280 + i * 45;
+        g2.gain.setValueAtTime(0.04, ctx.currentTime + 0.3 + i * 0.12);
+        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3 + i * 0.12 + 0.1);
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.start(ctx.currentTime + 0.3 + i * 0.12);
+        o2.stop(ctx.currentTime + 0.3 + i * 0.12 + 0.15);
+      }
+    }
+    setTimeout(play, 300);
+    setInterval(play, 2500);
+  </script>
+</body>
+</html>
