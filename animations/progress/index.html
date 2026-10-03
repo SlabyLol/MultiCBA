@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Progress Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12; height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 24px; overflow: hidden; font-family: system-ui, sans-serif;
+    }
+    .label {
+      font-size: 1rem; color: #666; letter-spacing: 4px; text-transform: uppercase;
+    }
+    .track {
+      width: min(70%, 400px); height: 8px;
+      background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;
+    }
+    .fill {
+      height: 100%; border-radius: 4px;
+      background: linear-gradient(90deg, #00f0ff, #ff00aa);
+      animation: progress 5s ease-in-out infinite;
+    }
+    @keyframes progress {
+      0% { width: 0%; }
+      75% { width: 100%; }
+      100% { width: 100%; }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #888; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="label">Starting System</div>
+  <div class="track"><div class="fill"></div></div>
+  <div class="info">Progress Boot · 7s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const notes = [200, 300, 400, 600];
+      notes.forEach((f, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        const t = ctx.currentTime + i * 1.4;
+        g.gain.setValueAtTime(0.1, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t + 0.45);
+      });
+    }
+    setTimeout(play, 300);
+    setInterval(play, 7000);
+  </script>
+</body>
+</html>
