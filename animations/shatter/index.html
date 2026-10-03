@@ -1,73 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shatter - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #000; height: 100vh;
-      display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
-    }
-    .frag {
-      position: absolute; width: 24px; height: 24px;
-      background: linear-gradient(135deg, #00f0ff, #ff00aa);
-      left: calc(50% - 12px); top: calc(50% - 12px);
-      animation: shatter 2s ease-out infinite;
-    }
-    @keyframes shatter {
-      0% { transform: translate(0,0) rotate(0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(0); opacity: 0; }
-    }
-    .info {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      color: #888; font-size: 0.85rem; text-align: center;
-      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
-    }
-    .info a { color: #00f0ff; }
-    body.preview .info { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shatter - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    for (let i = 0; i < 16; i++) {
-      const f = document.createElement('div');
-      f.className = 'frag';
-      const angle = (i / 16) * Math.PI * 2;
-      f.style.setProperty('--fx', Math.cos(angle) * 140 + 'px');
-      f.style.setProperty('--fy', Math.sin(angle) * 110 + 'px');
-      f.style.setProperty('--fr', (Math.random() * 400) + 'deg');
-      f.style.animationDelay = (Math.random() * 0.4) + 's';
-      document.body.appendChild(f);
-    }
-  </script>
-  <div class="info">Shatter · 3s · <a href="../../index.html">← Back to MultiCBA</a></div>
-  <script>
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const bs = ctx.sampleRate * 0.3;
-      const buf = ctx.createBuffer(1, bs, ctx.sampleRate);
-      const d = buf.getChannelData(0);
-      for (let i = 0; i < bs; i++) d[i] = Math.random() * 2 - 1;
-      const n = ctx.createBufferSource(); n.buffer = buf;
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.13, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-      n.connect(g); g.connect(ctx.destination); n.start();
-      const o = ctx.createOscillator(), g2 = ctx.createGain();
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(1100, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.4);
-      g2.gain.setValueAtTime(0.1, ctx.currentTime);
-      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-      o.connect(g2); g2.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 0.45);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 3000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Shatter · 3s</span><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const frags=[];for(let i=0;i<16;i++){const a=(i/16)*Math.PI*2;frags.push({a,sp:80+Math.random()*40,rot:Math.random()*6});}
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#000';ctx.fillRect(0,0,640,360);
+const cycle=(t%2);frags.forEach(f=>{const d=cycle*f.sp;const x=320+Math.cos(f.a)*d;const y=180+Math.sin(f.a)*d;const a=1-cycle;ctx.save();ctx.translate(x,y);ctx.rotate(cycle*f.rot);ctx.globalAlpha=a;const g=ctx.createLinearGradient(-10,-10,10,10);g.addColorStop(0,'#00f0ff');g.addColorStop(1,'#ff00aa');ctx.fillStyle=g;ctx.fillRect(-10,-10,20,20);ctx.restore();});
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();const bs=actx.sampleRate*0.25;const buf=actx.createBuffer(1,bs,actx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(bs*0.3));const n=actx.createBufferSource();n.buffer=buf;const g=actx.createGain();g.gain.value=0.15;n.connect(g);g.connect(actx.destination);n.start();}
+setTimeout(snd,300);setInterval(snd,3000);
+MultiCBABindDownload('dl',canvas,3,'shatter');
+</script></body></html>
