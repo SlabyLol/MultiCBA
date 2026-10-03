@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameCube Boot - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 80vh; }
+    .bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.85); display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .bar button, .bar a { background: #4a3080; color: #fff; border: 1px solid #9b6dff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none; }
+    .bar button:hover, .bar a:hover { background: #9b6dff; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>GameCube · 5s</span>
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#0a0612';
+      ctx.fillRect(0, 0, 640, 360);
+
+      // purple cube spinning (simplified 2D)
+      const s = Math.min(1, t / 0.8);
+      const rot = t * 1.5;
+      ctx.save();
+      ctx.translate(320, 160);
+      ctx.scale(s, s);
+      ctx.rotate(rot * 0.3);
+
+      // cube faces approximation
+      const size = 50;
+      ctx.fillStyle = '#6b4c9a';
+      ctx.fillRect(-size, -size, size * 2, size * 2);
+      ctx.strokeStyle = '#c9a0ff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(-size, -size, size * 2, size * 2);
+
+      // inner cube logo hint
+      ctx.fillStyle = '#9b6dff';
+      ctx.beginPath();
+      ctx.moveTo(0, -30); ctx.lineTo(30, 0); ctx.lineTo(0, 30); ctx.lineTo(-30, 0);
+      ctx.closePath(); ctx.fill();
+
+      ctx.restore();
+
+      if (t > 1.5) {
+        const a = Math.min(1, (t - 1.5) / 0.6);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('NINTENDO GAMECUBE', 320, 260);
+        ctx.globalAlpha = 1;
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function bootSound() {
+      if (actx.state === 'suspended') actx.resume();
+      [330, 392, 523, 659].forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain();
+        o.type = 'square'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.07, actx.currentTime + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.1 + 0.3);
+        o.connect(g); g.connect(actx.destination);
+        o.start(actx.currentTime + i * 0.1); o.stop(actx.currentTime + i * 0.1 + 0.35);
+      });
+    }
+    setTimeout(bootSound, 400);
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      try {
+        await MultiCBADownload(canvas, 5, 'gamecube-boot');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
