@@ -1,75 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logo Reveal - MultiCBA</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #000; height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
-      font-family: system-ui, sans-serif;
-    }
-    .text {
-      font-size: clamp(2rem, 9vw, 4.5rem);
-      font-weight: 700;
-      background: linear-gradient(90deg, #fff, #00f0ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      animation: reveal 3s ease-out infinite;
-      letter-spacing: 6px;
-    }
-    @keyframes reveal {
-      0% { opacity: 0; letter-spacing: 30px; filter: blur(10px); }
-      40% { opacity: 1; letter-spacing: 6px; filter: blur(0); }
-      80% { opacity: 1; }
-      100% { opacity: 0; }
-    }
-    .bar {
-      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
-      background: rgba(0,0,0,0.85); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
-    }
-    .bar input {
-      background: #1a1a1a; border: 1px solid #00f0ff; color: #fff; padding: 7px 12px;
-      border-radius: 6px; font-size: 0.9rem; width: 180px;
-    }
-    .bar button, .bar a {
-      background: #0a2a2a; color: #00f0ff; border: 1px solid #00f0ff; padding: 7px 14px;
-      border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none;
-    }
-    .bar button:hover, .bar a:hover { background: #00f0ff; color: #000; }
-    .bar span { color: #888; font-size: 0.85rem; }
-    body.preview .bar { display: none; }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logo Reveal - MultiCBA</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;overflow:hidden}canvas{display:block;max-width:100%;max-height:75vh}.bar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;background:rgba(0,0,0,.9);display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center}.bar input{background:#1a1a1a;border:1px solid #0ff;color:#fff;padding:7px 12px;border-radius:6px;width:160px}.bar button,.bar a{background:#012;color:#0ff;border:1px solid #0ff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.9rem;text-decoration:none}.bar button:disabled{opacity:.5}.bar span{color:#666;font-size:.85rem}body.preview .bar{display:none}</style>
 </head>
 <body>
-  <div class="text" id="logoText">MULTICBA</div>
-  <div class="bar">
-    <span>Logo Reveal · 6s · Edit text:</span>
-    <input type="text" id="customText" value="MULTICBA" maxlength="20" placeholder="Your text">
-    <a href="../../index.html">← Gallery</a>
-  </div>
-  <script>
-    if (location.search.includes('preview=1')) document.body.classList.add('preview');
-    const el = document.getElementById('logoText');
-    document.getElementById('customText').oninput = (e) => {
-      el.textContent = e.target.value || 'MULTICBA';
-    };
-
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    function play() {
-      if (ctx.state === 'suspended') ctx.resume();
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.setValueAtTime(200, ctx.currentTime);
-      o.frequency.linearRampToValueAtTime(900, ctx.currentTime + 1.3);
-      g.gain.setValueAtTime(0.1, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.3);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(); o.stop(ctx.currentTime + 1.35);
-    }
-    setTimeout(play, 300);
-    setInterval(play, 6000);
-  </script>
-</body>
-</html>
+<canvas id="c" width="640" height="360"></canvas>
+<div class="bar"><span>Reveal · 6s</span><input id="txt" value="MULTICBA" maxlength="20"><button id="dl">⬇ Download Video</button><a href="../../index.html">← Gallery</a></div>
+<script src="../../js/download.js"></script>
+<script>
+if(location.search.includes('preview=1'))document.body.classList.add('preview');
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let text='MULTICBA';document.getElementById('txt').oninput=e=>{text=e.target.value||'MULTICBA'};
+let t=0;
+function draw(){t+=0.016;ctx.fillStyle='#000';ctx.fillRect(0,0,640,360);
+const cycle=(t%3)/3;let a,blur,space;
+if(cycle<0.4){a=cycle/0.4;space=30-24*(cycle/0.4);blur=10*(1-cycle/0.4);}else if(cycle<0.8){a=1;space=6;blur=0;}else{a=1-(cycle-0.8)/0.2;space=6;blur=0;}
+ctx.save();ctx.globalAlpha=a;ctx.filter=blur?`blur(${blur}px)`:'none';ctx.font='bold 48px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.letterSpacing=space+'px';
+const g=ctx.createLinearGradient(200,0,440,0);g.addColorStop(0,'#fff');g.addColorStop(1,'#00f0ff');ctx.fillStyle=g;ctx.fillText(text,320,180);ctx.restore();
+requestAnimationFrame(draw);}draw();
+const actx=new(window.AudioContext||window.webkitAudioContext)();
+function snd(){if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.frequency.setValueAtTime(200,actx.currentTime);o.frequency.linearRampToValueAtTime(900,actx.currentTime+1.2);g.gain.setValueAtTime(0.1,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+1.2);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+1.25);}
+setTimeout(snd,300);setInterval(snd,6000);
+MultiCBABindDownload('dl',canvas,6,'logo-reveal');
+</script></body></html>
