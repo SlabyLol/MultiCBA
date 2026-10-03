@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glitch Jumpscare - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: system-ui, sans-serif; }
+    canvas { display: block; max-width: 100%; max-height: 75vh; }
+    .bar {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 10px 16px;
+      background: rgba(0,0,0,0.9); display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;
+    }
+    .bar input {
+      background: #1a1a1a; border: 1px solid #444; color: #fff; padding: 7px 12px;
+      border-radius: 6px; font-size: 0.9rem; width: 160px;
+    }
+    .bar button, .bar a {
+      background: #1a0033; color: #f0f; border: 1px solid #f0f; padding: 7px 14px;
+      border-radius: 6px; cursor: pointer; font-size: 0.9rem; text-decoration: none;
+    }
+    .bar button:hover, .bar a:hover { background: #f0f; color: #000; }
+    .bar button:disabled { opacity: 0.5; cursor: wait; }
+    .bar span { color: #888; font-size: 0.85rem; }
+    body.preview .bar { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="640" height="360"></canvas>
+  <div class="bar">
+    <span>Glitch Jumpscare · 6s</span>
+    <input type="text" id="customText" value="IT SEES YOU" maxlength="24" placeholder="Scare text">
+    <button id="dl">⬇ Download Video</button>
+    <a href="../../index.html">← Gallery</a>
+  </div>
+  <script src="../../js/download.js"></script>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0, fired = false;
+    let text = 'IT SEES YOU';
+    document.getElementById('customText').oninput = (e) => { text = e.target.value || 'IT SEES YOU'; };
+
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    function scareSound() {
+      if (actx.state === 'suspended') actx.resume();
+      const bs = actx.sampleRate * 0.6;
+      const buf = actx.createBuffer(1, bs, actx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < bs; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bs * 0.3));
+      const n = actx.createBufferSource(); n.buffer = buf;
+      const g = actx.createGain(); g.gain.value = 0.3;
+      n.connect(g); g.connect(actx.destination); n.start();
+      const o = actx.createOscillator(), g2 = actx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = 60;
+      g2.gain.setValueAtTime(0.2, actx.currentTime);
+      g2.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.5);
+      o.connect(g2); g2.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 0.55);
+    }
+
+    function draw() {
+      t += 0.016;
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(0, 0, 640, 360);
+
+      if (t < 3.5) {
+        // calm glitch boot
+        ctx.fillStyle = '#0ff';
+        ctx.font = '20px monospace';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = 0.6 + 0.2 * Math.sin(t * 5);
+        ctx.fillText('INITIALIZING...', 320 + (Math.random() > 0.9 ? 3 : 0), 180);
+        ctx.globalAlpha = 1;
+        // scan line
+        ctx.fillStyle = 'rgba(0,255,255,0.08)';
+        ctx.fillRect(0, (t * 80) % 360, 640, 4);
+      } else {
+        if (!fired) { fired = true; scareSound(); }
+        // chaotic glitch scare
+        for (let i = 0; i < 20; i++) {
+          const y = Math.random() * 360;
+          const h = 4 + Math.random() * 20;
+          ctx.fillStyle = `hsl(${Math.random() * 60}, 100%, ${20 + Math.random() * 40}%)`;
+          ctx.fillRect(0, y, 640, h);
+        }
+        // face-ish noise block
+        ctx.fillStyle = '#200';
+        ctx.fillRect(200, 60, 240, 200);
+        for (let i = 0; i < 80; i++) {
+          ctx.fillStyle = Math.random() > 0.5 ? '#f00' : '#000';
+          ctx.fillRect(210 + Math.random() * 220, 70 + Math.random() * 180, 4, 4);
+        }
+        // eyes
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(270, 130, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(370, 130, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath(); ctx.arc(270, 130, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(370, 130, 8, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#f0f';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, 320 + (Math.random() - 0.5) * 10, 300);
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    document.getElementById('dl').onclick = async function () {
+      const btn = this; btn.disabled = true; btn.textContent = 'Recording…';
+      t = 0; fired = false;
+      try {
+        await MultiCBADownload(canvas, 6, 'glitch-jumpscare');
+        btn.textContent = 'Downloaded!';
+      } catch (e) { btn.textContent = 'Error'; console.error(e); }
+      setTimeout(() => { btn.disabled = false; btn.textContent = '⬇ Download Video'; }, 2000);
+    };
+  </script>
+</body>
+</html>
