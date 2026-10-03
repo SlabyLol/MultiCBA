@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neon Pulse - MultiCBA</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: system-ui, sans-serif; }
+    .logo {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: clamp(3rem, 12vw, 6rem);
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 2px #00f0ff;
+      text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff, 0 0 80px #00f0ff;
+      animation: neonPulse 1.5s ease-in-out infinite;
+      letter-spacing: 8px;
+    }
+    @keyframes neonPulse {
+      0%, 100% { opacity: 0.55; filter: brightness(0.7); }
+      50% { opacity: 1; filter: brightness(1.5); }
+    }
+    .info {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: #666; font-size: 0.85rem; text-align: center;
+      background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+    }
+    .info a { color: #00f0ff; text-decoration: none; }
+    body.preview .info { display: none; }
+  </style>
+</head>
+<body>
+  <div class="logo">BOOT</div>
+  <div class="info">Neon Pulse · 6s · <a href="../../index.html">← Back to MultiCBA</a></div>
+  <script>
+    if (location.search.includes('preview=1')) document.body.classList.add('preview');
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    function tone(freq, dur, type='sine', vol=0.12, delay=0) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime + delay);
+      g.gain.linearRampToValueAtTime(vol, ctx.currentTime + delay + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + delay); o.stop(ctx.currentTime + delay + dur + 0.05);
+    }
+    function play() {
+      if (ctx.state === 'suspended') ctx.resume();
+      tone(440, 0.3); tone(554, 0.4, 'sine', 0.1, 0.15); tone(659, 0.5, 'sine', 0.1, 0.3);
+    }
+    // Auto-play sound after slight delay (browser autoplay policy)
+    setTimeout(play, 300);
+    // Loop sound every 6s
+    setInterval(play, 6000);
+  </script>
+</body>
+</html>
